@@ -23,6 +23,8 @@
 #include "rcmain.h"
 #include <vector>
 #include <cstdlib>
+#include <Windows.h>
+#include <wincon.h>
 
 // constructor
 Cube::Cube(int nt, int mt)
@@ -31,112 +33,359 @@ Cube::Cube(int nt, int mt)
 	maxTwists = mt;
 }
 
-// Up face rotate CW 90 deg
+// Up face rotate CW 90 deg, z axis, plane 2
 void Cube::twistU()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 2;
 
+	// swap rows and columns, reverse rows
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[i][DIM-1-j] = cube[plane][j][i];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[plane][j][i] = buf[j][i];
+		}
+	}
 }
 
-// Up face rotate CCW 90 deg
+// Up face rotate CCW 90 deg, z axis, plane 2
 void Cube::twistU_()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 2;
 
+	// swap rows and columns, reverse columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-i][j] = cube[plane][j][i];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[plane][j][i] = buf[j][i];
+		}
+	}
 }
 
-// Up face rotate 180 deg
+// Up face rotate 180 deg, z axis, plane 2
 void Cube::twistU2()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 2;
 
+	// reverse rows and columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-j][DIM-1-i] = cube[plane][j][i];
+		}
+	}
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[plane][j][i] = buf[j][i];
+		}
+	}
 }
 
-// Down face rotate CW 90 deg
+// Down face rotate CW 90 deg, -z axis, plane 0
 void Cube::twistD()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 0;
 
+	// swap rows and columns, reverse rows
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[i][DIM-1-j] = cube[plane][j][i];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[plane][j][i] = buf[j][i];
+		}
+	}
 }
 
-// Down face rotate CCW 90 deg
+// Down face rotate CCW 90 deg, -z axis, plane 0
 void Cube::twistD_()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 0;
 
+	// swap rows and columns, reverse columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-i][j] = cube[plane][j][i];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[plane][j][i] = buf[j][i];
+		}
+	}
 }
 
-// Down face rotate 180 deg
+// Down face rotate 180 deg, -z axis, plane 0
 void Cube::twistD2()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 0;
 
+	// reverse rows and columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-j][DIM-1-i] = cube[plane][j][i];
+		}
+	}
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[plane][j][i] = buf[j][i];
+		}
+	}
 }
 
-// Left face rotate CW 90 deg
+// Left face rotate CW 90 deg, x axis, plane 0
 void Cube::twistL()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 0;
 
+	// swap rows and columns, reverse rows
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[i][DIM-1-j] = cube[j][i][plane];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][i][plane] = buf[j][i];
+		}
+	}
 }
 
-// Left face rotate CCW 90 deg
+// Left face rotate CCW 90 deg, x axis, plane 0
 void Cube::twistL_()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 0;
 
+	// swap rows and columns, reverse columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-i][j] = cube[j][i][plane];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][i][plane] = buf[j][i];
+		}
+	}
 }
 
-// Left face rotate 180 deg
+// Left face rotate 180 deg, x axis plane 0
 void Cube::twistL2()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 0;
 
+	// reverse rows and columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-j][DIM-1-i] = cube[j][i][plane];
+		}
+	}
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][i][plane] = buf[j][i];
+		}
+	}
 }
 
-// Right face rotate CW 90 deg
+// Right face rotate CW 90 deg, x axis, plane 2
 void Cube::twistR()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 2;
+
+	// swap rows and columns, reverse rows
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[i][DIM-1-j] = cube[j][i][plane];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][i][plane] = buf[j][i];
+		}
+	}
 
 }
 
-// Right face rotate CCW 90 deg
+// Right face rotate CCW 90 deg, x axis plane 2
 void Cube::twistR_()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 2;
 
+	// swap rows and columns, reverse columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-i][j] = cube[j][i][plane];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][i][plane] = buf[j][i];
+		}
+	}
 }
 
-// Right face rotate 180 deg
+// Right face rotate 180 deg, x axis plane 2
 void Cube::twistR2()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 2;
 
+	// reverse rows and columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-j][DIM-1-i] = cube[j][i][plane];
+		}
+	}
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][i][plane] = buf[j][i];
+		}
+	}
 }
 
-// Front face rotate CW 90 deg
+// Front face rotate CW 90 deg, y axis, plane 2
 void Cube::twistF()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 2;
 
+	// swap rows and columns, reverse rows
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[i][DIM-1-j] = cube[j][plane][i];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][plane][i] = buf[j][i];
+		}
+	}
 }
 
-// Front face rotate CCW 90 deg
+// Front face rotate CCW 90 deg, y axis, plane 2
 void Cube::twistF_()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 2;
 
+	// swap rows and columns, reverse columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-i][j] = cube[j][plane][i];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][plane][i] = buf[j][i];
+		}
+	}
 }
 
-// Front face rotate 180 deg
+// Front face rotate 180 deg, y axis, plane 2
 void Cube::twistF2()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 2;
 
+	// reverse rows and columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-j][DIM-1-i] = cube[j][plane][i];
+		}
+	}
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][plane][i] = buf[j][i];
+		}
+	}
 }
 
-// Back face rotate CW 90 deg
+// Back face rotate CW 90 deg, y axis, plane 0
 void Cube::twistB()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 0;
 
+	// swap rows and columns, reverse rows
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[i][DIM-1-j] = cube[j][plane][i];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][plane][i] = buf[j][i];
+		}
+	}
 }
 
-// Back face rotate CCW 90 deg
+// Back face rotate CCW 90 deg, y axis, plane 0
 void Cube::twistB_()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 0;
 
+	// swap rows and columns, reverse columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-i][j] = cube[j][plane][i];
+		}
+	}
+	// copy back to cube from buf
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][plane][i] = buf[j][i];
+		}
+	}
 }
 
-// Back face rotate 180 deg
+// Back face rotate 180 deg, y axis, plane 0
 void Cube::twistB2()
 {
+	uint8_t buf[DIM][DIM];
+	int plane = 0;
 
+	// reverse rows and columns
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			buf[DIM-1-j][DIM-1-i] = cube[j][plane][i];
+		}
+	}
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			cube[j][plane][i] = buf[j][i];
+		}
+	}
 }
 
 bool Cube::isSolved()
@@ -218,14 +467,92 @@ void Cube::createPatternDB()
  */
 }
 
-// Display the cube faces
+// Display the cube faces using Windows color attributes
 void Cube::displayCubeFaces()
 {
-	// print the cube move and "L B D F R U" face heading
-	// display the faces L B D F R U as 3x3 squares
-	// show the solved cube and after each move
-	// clear the move queue
 
+	//COLORS LIST foreground 1-15
+	//0: Black
+	//1: Blue
+	//2: Green
+	//3: Cyan
+	//4: Red
+	//5: Purple
+	//6: Brown
+	//7: Default white
+	//8: Gray/Grey
+	//9: Bright blue
+	//10: Bright green
+	//11: Bright cyan
+	//12: Bright red
+	//13: Pink/Magenta
+	//14: Yellow
+	//15: Bright white
+	//Numbers after 15 include background colors
+	//16: background blue  0x10
+	//32: background green 0x20
+	//48: background cyan  0x30
+	//64: background red   0x40
+	//80: background purple 0x50
+	//96: background brown 0x60
+	//108: background white 0x70
+	//124: background gray 0x80
+
+	// map geometric density to windows color attribute
+
+	// colors not in wincon.h
+	enum Color : int {
+		FOREGROUND_BLACK=0,
+		FOREGROUND_CYAN=3,
+		FOREGROUND_PURPLE=5,
+		FOREGROUND_BROWN=6,
+		FOREGROUND_WHITE=7,
+		FOREGROUND_GRAY=8,
+		FOREGROUND_ORANGE=12,
+		FOREGROUND_YELLOW=14,
+	};
+
+	std::vector<int> face2FGcolor = {
+		FOREGROUND_WHITE,
+		FOREGROUND_YELLOW,
+		FOREGROUND_RED,
+		FOREGROUND_ORANGE,
+		FOREGROUND_GREEN,
+		FOREGROUND_BLUE,
+	};
+
+	std::vector<int> face2BGcolor = {
+		FOREGROUND_WHITE << 4,
+		FOREGROUND_YELLOW << 4,
+		FOREGROUND_RED << 4,
+		FOREGROUND_ORANGE << 4,
+		FOREGROUND_GREEN << 4,
+		FOREGROUND_BLUE << 4,
+	};
+
+	 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	 CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
+	 // Save the current text colors.
+	 GetConsoleScreenBufferInfo(hConsole, &csbiInfo);
+
+	// print "L B D F R U" above faces (left,back,down,front,right,up)
+	std::cout << "\nface: L    B    D    F    R    U" << "\n    ";
+	// display the faces L B D F R U as 3x3 squares
+	// show the scrambled and solved cube
+	// clear the move queue
+	for (int row = 0; row < DIM; ++row) {
+		for (face f : {face::L, face::B, face::D, face::F, face::R, face::U}) {
+			for (int col = 0; col < DIM; ++col) {
+				SetConsoleTextAttribute(hConsole,
+						face2FGcolor[facelets[static_cast<int>(f)][row][col]] | face2BGcolor[facelets[static_cast<int>(f)][row][col]]);
+			}
+			std::cout << " ";
+		}
+		std::cout << "\n";
+	}
+	WORD wOldColorAttrs = csbiInfo.wAttributes;
+	// Restore the original text colors.
+	SetConsoleTextAttribute(hConsole, wOldColorAttrs);
 
 }
 
@@ -249,7 +576,7 @@ void Cube::tabulateTestResults()
 		buf.push_back(rotStack.top());
 		rotStack.pop();
 	}
-	std::cout << "\nmoves: ";
+	std::cout << "\nsolution moves: ";
 	// recover the forward IDA solution moves by
 	// reversing the reverse order in buffer
 	for (auto revit = buf.rbegin(); revit != buf.rend(); ++revit) {
@@ -263,190 +590,192 @@ void Cube::tabulateTestResults()
 void Cube::createCubeFaces(bool init)
 {
 
-	color prev[DIM];
-	color cur[DIM];
-	color buf[DIM][DIM];
+	uint8_t prev[DIM];
+	uint8_t buf[DIM][DIM];
+	const std::vector<std::string> rotate2str{"U", "U'", "U2", "D", "D'", "D2",
+		"L", "L'", "L2", "R", "R'", "R2", "F", "F'", "F2", "B", "B'", "B2"};
 
-	// initialize the facelets to the solved state, each face the same color
+	// initialize the facelets of a face to the same color (the solved state)
 	if (init) {
 		for (int i = 0; i < DIM; ++i) {
-			for (int j = 0; j < DIM; j++) {
-				// U and D faces, yellow and white
-				facelets[0][i][j] = color::YELLOW;
-				facelets[DIM-1][i][j] = color::WHITE;
+			for (int j = 0; j < DIM; ++j) {
+				// U and D faces, white and yellow
+				facelets[static_cast<uint8_t>(face::U)][i][j] = static_cast<uint8_t>(color::WHITE);
+				facelets[static_cast<uint8_t>(face::D)][i][j] = static_cast<uint8_t>(color::YELLOW);
 				// L and R faces, green and blue
-				facelets[i][0][j] = color::GREEN;
-				facelets[i][DIM-1][j] = color::BLUE;
-				// F and B faces, orange and red
-				facelets[i][j][0] = color::ORANGE;
-				facelets[i][j][DIM-1] = color::RED;
+				facelets[static_cast<uint8_t>(face::L)][i][j] = static_cast<uint8_t>(color::GREEN);
+				facelets[static_cast<uint8_t>(face::R)][i][j] = static_cast<uint8_t>(color::BLUE);
+				// F and B faces, red and orange
+				facelets[static_cast<uint8_t>(face::F)][i][j] = static_cast<uint8_t>(color::RED);
+				facelets[static_cast<uint8_t>(face::B)][i][j] = static_cast<uint8_t>(color::ORANGE);
 			}
 		}
 	}
 
-	// print "L B D F R U" above faces
-	std::cout << "\nface: L    B    D    F    R    U" << std::endl;
+	// print the scramble moves
+	std::cout << "\nscramble moves: ";
 	// Determine which face to rotate by popping the mvQueue
 	while (!mvQueue.empty()) {
 		rotate rot = mvQueue.front();
+		std::cout << rotate2str[static_cast<uint8_t>(rot)] << " ";
 		switch (rot) {
 		/**********************************************************************/
 		case rotate::U:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[i][DIM-1-j] = facelets[face::U][j][i];
+					buf[i][DIM-1-j] = facelets[static_cast<uint8_t>(face::U)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::U][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::U)][j][i] = buf[j][i];
 				}
 			}
 			// U, rotate R,B,L,F row 0 to the left
 			// previous = F
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::F][0][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::F)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][0][i] = facelets[face::R][0][i];
+				facelets[static_cast<uint8_t>(face::F)][0][i] = facelets[static_cast<uint8_t>(face::R)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][0][i] = facelets[face::B][0][i];
+				facelets[static_cast<uint8_t>(face::R)][0][i] = facelets[static_cast<uint8_t>(face::B)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][0][i] = facelets[face::L][0][i];
+				facelets[static_cast<uint8_t>(face::B)][0][i] = facelets[static_cast<uint8_t>(face::L)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][0][i] = prev[i];
+				facelets[static_cast<uint8_t>(face::L)][0][i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::U_:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-i][j] = facelets[face::U][j][i];
+					buf[DIM-1-i][j] = facelets[static_cast<uint8_t>(face::U)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::U][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::U)][j][i] = buf[j][i];
 				}
 			}
 			// U_, rotate L,B,R,F, row 0 to the right
 			// previous = F
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::F][0][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::F)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][0][i] = facelets[face::L][0][i];
+				facelets[static_cast<uint8_t>(face::F)][0][i] = facelets[static_cast<uint8_t>(face::L)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][0][i] = facelets[face::B][0][i];
+				facelets[static_cast<uint8_t>(face::L)][0][i] = facelets[static_cast<uint8_t>(face::B)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][0][i] = facelets[face::R][0][i];
+				facelets[static_cast<uint8_t>(face::B)][0][i] = facelets[static_cast<uint8_t>(face::R)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][0][i] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][0][i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::U2:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-j][DIM-1-i] = facelets[face::U][j][i];
+					buf[DIM-1-j][DIM-1-i] = facelets[static_cast<uint8_t>(face::U)][j][i];
 				}
 			}
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::U][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::U)][j][i] = buf[j][i];
 				}
 			}
 			// U2, swap L-R row 0
 			// previous = L
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::L][0][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::L)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][0][i] = facelets[face::R][0][i];
+				facelets[static_cast<uint8_t>(face::L)][0][i] = facelets[static_cast<uint8_t>(face::R)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][0][i] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][0][i] = prev[i];
 			}
 			// U2, swap B-F row 0
 			// previous = B
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::B][0][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::B)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][0][i] = facelets[face::F][0][i];
+				facelets[static_cast<uint8_t>(face::B)][0][i] = facelets[static_cast<uint8_t>(face::F)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][0][i] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][0][i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::D:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[i][DIM-1-j] = facelets[face::D][j][i];
+					buf[i][DIM-1-j] = facelets[static_cast<uint8_t>(face::D)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::D][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::D)][j][i] = buf[j][i];
 				}
 			}
 			// D, rotate L,B,R,F row 2 to the right
 			// previous = F
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::F][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::F)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][DIM-1][i] = facelets[face::L][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::F)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][DIM-1][i] = facelets[face::B][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::L)][DIM-1][i] = facelets[static_cast<uint8_t>(face::B)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][DIM-1][i] = facelets[face::R][DIM-1][i];
+				facelets[static_cast<uint8_t>(static_cast<uint8_t>(face::B))][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][DIM-1][i] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][DIM-1][i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::D_:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-i][j] = facelets[face::D][j][i];
+					buf[DIM-1-i][j] = facelets[static_cast<uint8_t>(face::D)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::D][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::D)][j][i] = buf[j][i];
 				}
 			}
 			// D_, rotate R,B,L,F row 2 to the left
 			// previous = F
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::F][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::F)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][DIM-1][i] = facelets[face::R][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::F)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][DIM-1][i] = facelets[face::B][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::R)][DIM-1][i] = facelets[static_cast<uint8_t>(face::B)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][DIM-1][i] = facelets[face::L][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::B)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][DIM-1][i] = prev[i];
+				facelets[static_cast<uint8_t>(face::L)][DIM-1][i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
@@ -454,412 +783,412 @@ void Cube::createCubeFaces(bool init)
 			// D2, swap L-R row 2
 			// previous = L
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::L][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::L)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][DIM-1][i] = facelets[face::R][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::L)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][DIM-1][i] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][DIM-1][i] = prev[i];
 			}
 			// D2, swap B-F row 2
 			// previous = B
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::B][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::B)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][DIM-1][i] = facelets[face::F][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::B)][DIM-1][i] = facelets[static_cast<uint8_t>(face::F)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][DIM-1][i] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][DIM-1][i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::L:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[i][DIM-1-j] = facelets[face::L][j][i];
+					buf[i][DIM-1-j] = facelets[static_cast<uint8_t>(face::L)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::L][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::L)][j][i] = buf[j][i];
 				}
 			}
 			// L, rotate B,D,F,U col 0 down
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][i][0] = facelets[face::B][i][0];
+				facelets[static_cast<uint8_t>(face::U)][i][0] = facelets[static_cast<uint8_t>(face::B)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][i][0] = facelets[face::D][i][0];
+				facelets[static_cast<uint8_t>(face::B)][i][0] = facelets[static_cast<uint8_t>(face::D)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][i][0] = facelets[face::F][i][0];
+				facelets[static_cast<uint8_t>(face::D)][i][0] = facelets[static_cast<uint8_t>(face::F)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][i][0] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::L_:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-i][j] = facelets[face::L][j][i];
+					buf[DIM-1-i][j] = facelets[static_cast<uint8_t>(face::L)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::L][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::L)][j][i] = buf[j][i];
 				}
 			}
 			// L_, rotate F,D,B,U col 0 up
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][i][0] = facelets[face::F][i][0];
+				facelets[static_cast<uint8_t>(face::U)][i][0] = facelets[static_cast<uint8_t>(face::F)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][i][0] = facelets[face::D][i][0];
+				facelets[static_cast<uint8_t>(face::F)][i][0] = facelets[static_cast<uint8_t>(face::D)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][i][0] = facelets[face::B][i][0];
+				facelets[static_cast<uint8_t>(face::D)][i][0] = facelets[static_cast<uint8_t>(face::B)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::B)][i][0] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::L2:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-j][DIM-1-i] = facelets[face::L][j][i];
+					buf[DIM-1-j][DIM-1-i] = facelets[static_cast<uint8_t>(face::L)][j][i];
 				}
 			}
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::L][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::L)][j][i] = buf[j][i];
 				}
 			}
 			// L2, swap U-D col 0
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][i][0] = facelets[face::D][i][0];
+				facelets[static_cast<uint8_t>(face::U)][i][0] = facelets[static_cast<uint8_t>(face::D)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::D)][i][0] = prev[i];
 			}
 			// L2, swap B-F col 0
 			// previous = B
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::B][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::B)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][i][0] = facelets[face::F][i][0];
+				facelets[static_cast<uint8_t>(face::B)][i][0] = facelets[static_cast<uint8_t>(face::F)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][i][0] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::R:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[i][DIM-1-j] = facelets[face::R][j][i];
+					buf[i][DIM-1-j] = facelets[static_cast<uint8_t>(face::R)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::R][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::R)][j][i] = buf[j][i];
 				}
 			}
 			// R, rotate F,D,B,U col 2 up
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][i][DIM-1];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][i][DIM-1] = facelets[face::F][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][i][DIM-1] = facelets[static_cast<uint8_t>(face::F)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][i][DIM-1] = facelets[face::D][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::F)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][i][DIM-1] = facelets[face::B][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::D)][i][DIM-1] = facelets[static_cast<uint8_t>(face::B)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::B)][i][DIM-1] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::R_:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-i][j] = facelets[face::R][j][i];
+					buf[DIM-1-i][j] = facelets[static_cast<uint8_t>(face::R)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::R][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::R)][j][i] = buf[j][i];
 				}
 			}
 			// R_, rotate B,D,F,U col 2 down
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][i][DIM-1];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][i][DIM-1] = facelets[face::B][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][i][DIM-1] = facelets[static_cast<uint8_t>(face::B)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][i][DIM-1] = facelets[face::D][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::B)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][i][DIM-1] = facelets[face::F][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::D)][i][DIM-1] = facelets[static_cast<uint8_t>(face::F)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][i][DIM-1] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::R2:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-j][DIM-1-i] = facelets[face::R][j][i];
+					buf[DIM-1-j][DIM-1-i] = facelets[static_cast<uint8_t>(face::R)][j][i];
 				}
 			}
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::R][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::R)][j][i] = buf[j][i];
 				}
 			}
 			// R2, swap U-D col 2
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][i][DIM-1];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][i][DIM-1] = facelets[face::D][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::D)][i][DIM-1] = prev[i];
 			}
 			// R2, swap B-F col 2
 			// previous = B
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::B][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::B)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::B][i][0] = facelets[face::F][i][0];
+				facelets[static_cast<uint8_t>(face::B)][i][0] = facelets[static_cast<uint8_t>(face::F)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::F][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][i][0] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::F:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[i][DIM-1-j] = facelets[face::F][j][i];
+					buf[i][DIM-1-j] = facelets[static_cast<uint8_t>(face::F)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::F][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::F)][j][i] = buf[j][i];
 				}
 			}
 			// F, rotate L col 2 up, D row 2 left, R col 0 down,  U row 2 right
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][DIM-1][i] = facelets[face::L][DIM-1-i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][i][DIM-1] = facelets[face::D][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::L)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][DIM-1][i] = facelets[face::R][DIM-1-i][0];
+				facelets[static_cast<uint8_t>(face::D)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][i][0] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::F_:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-i][j] = facelets[face::F][j][i];
+					buf[DIM-1-i][j] = facelets[static_cast<uint8_t>(face::F)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::F][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::F)][j][i] = buf[j][i];
 				}
 			}
 			// F_, rotate R col 0 up, D row 2 right, L col 2 down, U row 2 left
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][DIM-1][i] = facelets[face::R][i][0];
+				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][i][0] = facelets[face::D][DIM-1][DIM-1-i];
+				facelets[static_cast<uint8_t>(face::R)][i][0] = facelets[static_cast<uint8_t>(face::D)][DIM-1][DIM-1-i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][DIM-1][i] = facelets[face::L][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::D)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][DIM-1-i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::L)][DIM-1-i][DIM-1] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::F2:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-j][DIM-1-i] = facelets[face::F][j][i];
+					buf[DIM-1-j][DIM-1-i] = facelets[static_cast<uint8_t>(face::F)][j][i];
 				}
 			}
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::F][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::F)][j][i] = buf[j][i];
 				}
 			}
 			// F2, swap Lcol2-Rcol0
 			// previous = L
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::L][i][DIM-1];
+				prev[i] = facelets[static_cast<uint8_t>(face::L)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][i][DIM-1] = facelets[face::R][DIM-1-i][0];
+				facelets[static_cast<uint8_t>(face::L)][i][DIM-1] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][DIM-1-i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][DIM-1-i][0] = prev[i];
 			}
 			// F2, swap Urow2-Drow2
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][DIM-1][i] = facelets[face::D][DIM-1][DIM-1-i];
+				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::D)][DIM-1][DIM-1-i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][DIM-1][DIM-1-i] = prev[i];
+				facelets[static_cast<uint8_t>(face::D)][DIM-1][DIM-1-i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::B:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[i][DIM-1-j] = facelets[face::B][j][i];
+					buf[i][DIM-1-j] = facelets[static_cast<uint8_t>(face::B)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::B][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::B)][j][i] = buf[j][i];
 				}
 			}
 			// B, rotate R col 2 up, D row 0 left, L col 0 down, U row 0 right
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][0][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][0][i] = facelets[face::R][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][0][i] = facelets[static_cast<uint8_t>(face::R)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][i][DIM-1] = facelets[face::D][0][DIM-1-i];
+				facelets[static_cast<uint8_t>(face::R)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][0][DIM-1-i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][0][i] = facelets[face::L][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::D)][0][i] = facelets[static_cast<uint8_t>(face::L)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][DIM-1-i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::L)][DIM-1-i][0] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::B_:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-i][j] = facelets[face::B][j][i];
+					buf[DIM-1-i][j] = facelets[static_cast<uint8_t>(face::B)][j][i];
 				}
 			}
 			// copy back to facelets from buf
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::B][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::B)][j][i] = buf[j][i];
 				}
 			}
 			// B_, rotate L col 0 up, D row 0 right, R col 2 down, U row 0 left
 			// previous =
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][DIM-1][i] = facelets[face::L][DIM-1-i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][i][DIM-1] = facelets[face::D][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::L)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][DIM-1][i] = facelets[face::R][DIM-1-i][0];
+				facelets[static_cast<uint8_t>(face::D)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][i][0] = prev[i];
 			}
 			break;
 		/**********************************************************************/
 		case rotate::B2:
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					buf[DIM-1-j][DIM-1-i] = facelets[face::B][j][i];
+					buf[DIM-1-j][DIM-1-i] = facelets[static_cast<uint8_t>(face::B)][j][i];
 				}
 			}
 			for (int i = 0; i < DIM; ++i) {
 				for (int j = 0; j < DIM; ++j) {
-					facelets[face::B][j][i] = buf[j][i];
+					facelets[static_cast<uint8_t>(face::B)][j][i] = buf[j][i];
 				}
 			}
 			// B2, swap Lcol0-Rcol2
 			// previous = L
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::L][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::L)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::L][i][0] = facelets[face::R][DIM-1-i][DIM-1];
+				facelets[static_cast<uint8_t>(face::L)][i][0] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::R][DIM-1-i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][DIM-1-i][DIM-1] = prev[i];
 			}
 			// B2, swap Urow0-Drow0
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[face::U][0][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::U][0][i] = facelets[face::D][0][DIM-1-i];
+				facelets[static_cast<uint8_t>(face::U)][0][i] = facelets[static_cast<uint8_t>(face::D)][0][DIM-1-i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[face::D][0][DIM-1-i] = prev[i];
+				facelets[static_cast<uint8_t>(face::D)][0][DIM-1-i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
@@ -868,6 +1197,7 @@ void Cube::createCubeFaces(bool init)
 		}
 		mvQueue.pop();
 	}
+	std::cout << "\n\n";
 }
 
 // run IDA*, IDDFS with pruning, Richard Korf algorithm

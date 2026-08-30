@@ -24,14 +24,14 @@ const int MOVES = 18;
 // number of faces in the cube
 const int NFACES = 6;
 
-enum class color :char {WHITE, YELLOW, RED, ORANGE, GREEN, BLUE};
+enum class color : uint8_t {WHITE, YELLOW, RED, ORANGE, GREEN, BLUE};
 // corner has 3 facelets, edge has 2 facelets, center has 1 facelet
-enum class position :char {CORNER, EDGE, CENTER};
+enum class position : uint8_t{CORNER, EDGE, CENTER};
 // Faces: Up, Down, Left, Right, Front, Back
-enum class face : char {L, B, D, F, R, U};
+enum class face : uint8_t {L, B, D, F, R, U};
 
 // Rotations of the faces, or twists (90 deg, 180 deg): CW, CCW, CWCW
-enum class rotate {U, U_, U2, D, D_, D2, L, L_, L2, R, R_, R2, F, F_, F2, B, B_, B2};
+enum class rotate : uint8_t {U, U_, U2, D, D_, D2, L, L_, L2, R, R_, R2, F, F_, F2, B, B_, B2};
 
 // a Cubie can be a corner, edge, or center position, cube = 3x3x3 cubies
 struct Cubie {
@@ -46,7 +46,7 @@ struct Cubie {
 class Cube {
 private:
 	uint8_t cube[DIM][DIM][DIM];
-	color facelets[NFACES][DIM][DIM];
+	uint8_t facelets[NFACES][DIM][DIM];
 	int ntrials;
 	int maxTwists;
 	// moves done while performing DFS
