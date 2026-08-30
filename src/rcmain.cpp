@@ -20,9 +20,11 @@
  * Map cube number to position and colors; ie., this cubie has these colors and is an edge or corner
  */
 #include <iostream>
+#include <sstream>
 #include "rcmain.h"
 #include <vector>
 #include <cstdlib>
+#include <cstring>
 #include <Windows.h>
 #include <wincon.h>
 
@@ -613,7 +615,7 @@ void Cube::createCubeFaces(bool init)
 	}
 
 	// print the scramble moves
-	std::cout << "\nscramble moves: ";
+	std::cout << "\ncube scramble moves: ";
 	// Determine which face to rotate by popping the mvQueue
 	while (!mvQueue.empty()) {
 		rotate rot = mvQueue.front();
@@ -1241,7 +1243,7 @@ void Cube::performIDAstar()
 
 }
 
-void Cube::doMove(rotate rot)
+inline void Cube::doMove(rotate rot)
 {
 	(this->*cubefcn[int(rot)])();
 }
@@ -1286,14 +1288,14 @@ void Cube::performIDA()
 	}
 }
 
-void handleIDA(int trials, int maxTwists)
+void handleIDA(int trials, int moves)
 {
 	// create a cube with the trials and maxTwists
-	Cube cube(trials, maxTwists);
+	Cube cube(trials, moves);
 	// loop over the trials
 	for (int tri = 0; tri < trials; ++tri) {
 		// loop over the twists
-		for (int tws = 0; tws < maxTwists; ++tws) {
+		for (int tws = 0; tws < moves; ++tws) {
 			// Scramble cube starting position and save moves
 			cube.scrambleCube(tws);
 			// Create the cube faces using saved moves
@@ -1311,7 +1313,7 @@ void handleIDA(int trials, int maxTwists)
 	}
 }
 
-void handleIDAstar(int trials, int maxTwists)
+void handleIDAstar(int trials, int moves)
 {
 	// create a cube
 	// create pattern databases if necessary
@@ -1327,10 +1329,52 @@ void handleIDAstar(int trials, int maxTwists)
 }
 
 int main(int argc, char *argv[]) {
-	std::cout << "!!!Hello World!!!" << std::endl; // prints !!!Hello World!!!
-	// Enter the max number of twists
-	// Enter the number of trials for a given number of twists
-	// Enter IDA or IDA*
-	// call handleIDA() or handleIDAstar() and supply the twists and trials
+	// use command line arguments
+	if (argc == 2) {
+		if (std::strcmp(argv[1], "1") == 0) {
+			handleIDA(1,1);
+		} else if (std::strcmp(argv[1], "2") == 0) {
+			handleIDAstar(1,1);
+		} else {
+			std::cout << "you entered invalid option " << argv[1] << std::endl;
+		}
+	} else {
+		const int min_moves = 1;
+		const int max_moves = 10;
+		const int min_trials = 1;
+		const int max_trials = 10;
+		int moves = 1;
+		int trials = 1;
+		std::string prune;
+		std::ostringstream result;
+		// Enter the number of moves
+		std::cout << "Enter the number of Rubik's Cube moves (1-10): ";
+		std::cin >> moves;
+		// Enter the number of trials
+		std::cout << "Enter the number of trials using the given number of moves (1-10): ";
+		std::cin >> trials;
+		// Enter IDA or IDA*
+		std::cout << "Use pruning tables (y/n): ";
+		std::cin >> prune;
+		if ((moves < min_moves) || (moves > max_moves)) {
+			result << "moves not in [" << min_moves << "," << max_moves << "], ";
+		}
+		if ((trials < min_trials) || (trials > max_trials)) {
+			result << "trials not in [" << min_trials << "," << max_trials << "], ";
+		}
+		if ((prune != "y") || (prune != "n")) {
+			result << "prune is not 'y' or 'n'" << "\n";
+		}
+		if (result.str().size() > 0) {
+			std::cout << result.str() << std::endl;
+			return 1;
+		}
+		if (prune == "y") {
+			handleIDAstar(trials, moves);
+		} else {
+			handleIDA(trials, moves);
+		}
+
+	}
 	return 0;
 }

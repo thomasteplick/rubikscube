@@ -56,7 +56,7 @@ private:
 
 	bool isSolved();
 	bool boundDFS(int depth, int bound);
-	void doMove(rotate move);
+	inline void doMove(rotate move);
 
 	// cube face moves, twists CW 90deg, CCW 90deg, 180deg
 	// Up face
@@ -135,8 +135,8 @@ public:
 
 };
 
-void handleIDA(int trials, int maxTwists);
+void handleIDA(int trials, int moves);
 
-void handleIDAstar(int trials, int maxTwists);
+void handleIDAstar(int trials, int moves);
 
 #endif /* RCMAIN_H_ */
