@@ -1125,7 +1125,7 @@ void Cube::createCubeFaces(bool init)
 				facelets[static_cast<uint8_t>(face::R)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][0][DIM-1-i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][0][i] = facelets[static_cast<uint8_t>(face::L)][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::D)][0][i] = facelets[static_cast<uint8_t>(face::L)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
 				facelets[static_cast<uint8_t>(face::L)][DIM-1-i][0] = prev[i];
@@ -1147,19 +1147,19 @@ void Cube::createCubeFaces(bool init)
 			// B_, rotate L col 0 up, D row 0 right, R col 2 down, U row 0 left
 			// previous =
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][DIM-1-i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][0][i] = facelets[static_cast<uint8_t>(face::L)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::L)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::L)][i][0] = facelets[static_cast<uint8_t>(face::D)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][0];
+				facelets[static_cast<uint8_t>(face::D)][0][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::R)][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][i][DIM-1] = prev[i];
 			}
 			break;
 		/**********************************************************************/
