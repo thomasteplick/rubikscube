@@ -407,8 +407,8 @@ bool Cube::isSolved()
 	return true;
 }
 
-// scramble solved cube with ntwists
-void Cube::scrambleCube(int ntwists)
+// scramble solved cube with nmoves
+void Cube::scrambleCube(int nmoves)
 {
 	uint8_t n = 0;
 	// initialize the cube order for the solved cube
@@ -426,9 +426,10 @@ void Cube::scrambleCube(int ntwists)
 		mvQueue.pop();
 	}
 	// loop over the number of requested twists
-	for (int i = 0; i < ntwists; ++i) {
+	for (int i = 0; i < nmoves; ++i) {
 		// random selection of move
-		rotate mv = static_cast<rotate>(std::rand() % MOVES);
+		//rotate mv = static_cast<rotate>(std::rand() % MOVES);
+		rotate mv = rotate::F2;
 		doMove(mv);
 		// push to move queue for later display
 		mvQueue.push(mv);
@@ -536,9 +537,10 @@ void Cube::displayCubeFaces()
 	 CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
 	 // Save the current text colors.
 	 GetConsoleScreenBufferInfo(hConsole, &csbiInfo);
+	WORD wOldColorAttrs = csbiInfo.wAttributes;
 
 	// print "L B D F R U" above faces (left,back,down,front,right,up)
-	std::cout << "\nface: L    B    D    F    R    U" << "\n    ";
+	std::cout << "  L       B       D       F       R       U" << "\n";
 	// display the faces L B D F R U as 3x3 squares
 	// show the scrambled and solved cube
 	// clear the move queue
@@ -547,12 +549,14 @@ void Cube::displayCubeFaces()
 			for (int col = 0; col < DIM; ++col) {
 				SetConsoleTextAttribute(hConsole,
 						face2FGcolor[facelets[static_cast<int>(f)][row][col]] | face2BGcolor[facelets[static_cast<int>(f)][row][col]]);
+				std::cout << "  ";
 			}
-			std::cout << " ";
+			// Restore the original text colors.
+			SetConsoleTextAttribute(hConsole, wOldColorAttrs);
+			std::cout << "  ";
 		}
 		std::cout << "\n";
 	}
-	WORD wOldColorAttrs = csbiInfo.wAttributes;
 	// Restore the original text colors.
 	SetConsoleTextAttribute(hConsole, wOldColorAttrs);
 
@@ -578,14 +582,13 @@ void Cube::tabulateTestResults()
 		buf.push_back(rotStack.top());
 		rotStack.pop();
 	}
-	std::cout << "\nsolution moves: ";
+	std::cout << "cube solution moves: ";
 	// recover the forward IDA solution moves by
 	// reversing the reverse order in buffer
 	for (auto revit = buf.rbegin(); revit != buf.rend(); ++revit) {
 		mvQueue.push(*revit);
-		std::cout << rot2char[static_cast<int>(*revit)] << " ";
+		//std::cout << rot2char[static_cast<int>(*revit)] << " ";
 	}
-	std::cout << std::endl;
 }
 
 // Create six 3x3 cube faces from the cube state
@@ -612,10 +615,10 @@ void Cube::createCubeFaces(bool init)
 				facelets[static_cast<uint8_t>(face::B)][i][j] = static_cast<uint8_t>(color::ORANGE);
 			}
 		}
+		// print the scramble moves
+		std::cout << "cube scramble moves: ";
 	}
 
-	// print the scramble moves
-	std::cout << "\ncube scramble moves: ";
 	// Determine which face to rotate by popping the mvQueue
 	while (!mvQueue.empty()) {
 		rotate rot = mvQueue.front();
@@ -1199,7 +1202,7 @@ void Cube::createCubeFaces(bool init)
 		}
 		mvQueue.pop();
 	}
-	std::cout << "\n\n";
+	std::cout << "\n";
 }
 
 // run IDA*, IDDFS with pruning, Richard Korf algorithm
@@ -1281,7 +1284,6 @@ void Cube::performIDA()
 {
 	int depth = 0;
 	int bound = 1;
-	std::cout << "IDDFS bound = " << bound << std::endl;
 	while (!boundDFS(depth, bound)) {
 		++bound;
 		std::cout << "IDDFSbound = " << bound << std::endl;
@@ -1295,9 +1297,9 @@ void handleIDA(int trials, int moves)
 	// loop over the trials
 	for (int tri = 0; tri < trials; ++tri) {
 		// loop over the twists
-		for (int tws = 0; tws < moves; ++tws) {
+		for (int mvs = 1; mvs <= moves; ++mvs) {
 			// Scramble cube starting position and save moves
-			cube.scrambleCube(tws);
+			cube.scrambleCube(mvs);
 			// Create the cube faces using saved moves
 			// and display them, 6 faces 3x3 in one row
 			cube.createCubeFaces(true);
