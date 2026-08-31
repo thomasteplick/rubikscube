@@ -24,6 +24,7 @@
 #include "rcmain.h"
 #include <vector>
 #include <cstdlib>
+#include <ctime>
 #include <cstring>
 #include <Windows.h>
 #include <wincon.h>
@@ -428,8 +429,8 @@ void Cube::scrambleCube(int nmoves)
 	// loop over the number of requested twists
 	for (int i = 0; i < nmoves; ++i) {
 		// random selection of move
-		//rotate mv = static_cast<rotate>(std::rand() % MOVES);
-		rotate mv = rotate::F2;
+		//rotate mv = revRotate[std::rand() % MOVES];
+		rotate mv = rotate::B;
 		doMove(mv);
 		// push to move queue for later display
 		mvQueue.push(mv);
@@ -1331,6 +1332,9 @@ void handleIDAstar(int trials, int moves)
 }
 
 int main(int argc, char *argv[]) {
+	// seed the random number generator so it changes over time
+	std::srand(time(NULL));
+
 	// use command line arguments
 	if (argc == 2) {
 		if (std::strcmp(argv[1], "1") == 0) {
