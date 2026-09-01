@@ -429,8 +429,8 @@ void Cube::scrambleCube(int nmoves)
 	// loop over the number of requested twists
 	for (int i = 0; i < nmoves; ++i) {
 		// random selection of move
-		//rotate mv = revRotate[std::rand() % MOVES];
-		rotate mv = rotate::B;
+		rotate mv = revRotate[std::rand() % MOVES];
+		//rotate mv = rotate::B_;
 		doMove(mv);
 		// push to move queue for later display
 		mvQueue.push(mv);
@@ -541,26 +541,56 @@ void Cube::displayCubeFaces()
 	WORD wOldColorAttrs = csbiInfo.wAttributes;
 
 	// print "L B D F R U" above faces (left,back,down,front,right,up)
-	std::cout << "  L       B       D       F       R       U" << "\n";
+	std::cout << "       L                B                D                F                R                U" << "\n";
 	// display the faces L B D F R U as 3x3 squares
 	// show the scrambled and solved cube
 	// clear the move queue
 	for (int row = 0; row < DIM; ++row) {
 		for (face f : {face::L, face::B, face::D, face::F, face::R, face::U}) {
+			// facelets
 			for (int col = 0; col < DIM; ++col) {
 				SetConsoleTextAttribute(hConsole,
 						face2FGcolor[facelets[static_cast<int>(f)][row][col]] | face2BGcolor[facelets[static_cast<int>(f)][row][col]]);
-				std::cout << "  ";
+				std::cout << "    ";
+				// Restore the original text colors.
+				SetConsoleTextAttribute(hConsole, wOldColorAttrs);
+				// add vertical separation between facelets
+				std::cout << " ";
 			}
 			// Restore the original text colors.
 			SetConsoleTextAttribute(hConsole, wOldColorAttrs);
 			std::cout << "  ";
 		}
 		std::cout << "\n";
+		for (face f : {face::L, face::B, face::D, face::F, face::R, face::U}) {
+			// facelets
+			for (int col = 0; col < DIM; ++col) {
+				SetConsoleTextAttribute(hConsole,
+						face2FGcolor[facelets[static_cast<int>(f)][row][col]] | face2BGcolor[facelets[static_cast<int>(f)][row][col]]);
+				std::cout << "    ";
+				// Restore the original text colors.
+				SetConsoleTextAttribute(hConsole, wOldColorAttrs);
+				// add vertical separation between facelets
+				std::cout << " ";
+			}
+			// Restore the original text colors.
+			SetConsoleTextAttribute(hConsole, wOldColorAttrs);
+			std::cout << "  ";
+		}
+		std::cout << "\n";
+		// add horizontal separation between facelets
+		for (int i = 0; i < NFACES; i++) {
+			// facelets
+			for (int col = 0; col < DIM; ++col) {
+				std::cout << "    ";
+				std::cout << " ";
+			}
+			std::cout << "  ";
+		}
+		std::cout << "\n";
 	}
 	// Restore the original text colors.
 	SetConsoleTextAttribute(hConsole, wOldColorAttrs);
-
 }
 
 
@@ -1287,7 +1317,6 @@ void Cube::performIDA()
 	int bound = 1;
 	while (!boundDFS(depth, bound)) {
 		++bound;
-		std::cout << "IDDFSbound = " << bound << std::endl;
 	}
 }
 
@@ -1297,22 +1326,19 @@ void handleIDA(int trials, int moves)
 	Cube cube(trials, moves);
 	// loop over the trials
 	for (int tri = 0; tri < trials; ++tri) {
-		// loop over the twists
-		for (int mvs = 1; mvs <= moves; ++mvs) {
-			// Scramble cube starting position and save moves
-			cube.scrambleCube(mvs);
-			// Create the cube faces using saved moves
-			// and display them, 6 faces 3x3 in one row
-			cube.createCubeFaces(true);
-			cube.displayCubeFaces();
-			// Perform IDA()
-			cube.performIDA();
-			// tabulate the results:  solution time and 1/4 turn metric (QTM)
-			cube.tabulateTestResults();
-			// Create and Display the faces of the solution
-			cube.createCubeFaces(false);
-			cube.displayCubeFaces();
-		}
+		// Scramble cube starting position and save moves
+		cube.scrambleCube(moves);
+		// Create the cube faces using saved moves
+		// and display them, 6 faces 3x3 in one row
+		cube.createCubeFaces(true);
+		cube.displayCubeFaces();
+		// Perform IDA()
+		cube.performIDA();
+		// tabulate the results:  solution time and 1/4 turn metric (QTM)
+		cube.tabulateTestResults();
+		// Create and Display the faces of the solution
+		cube.createCubeFaces(false);
+		cube.displayCubeFaces();
 	}
 }
 
@@ -1323,12 +1349,11 @@ void handleIDAstar(int trials, int moves)
 	// read in the three pattern databases:  corners1-8, edges1-6, edges 7-12
 	// create a cube with the maxTwists and trials
 	// loop over the trials
-	//   loop over the twists
-	//     Scramble cube starting position
-	//     Create the cube faces and display them, 6 faces 3x3 in one row
-	//     Perform IDA* (IDDFS with pruning)
-	//     tabulate the results:  solution time and 1/4 turn metric (QTM)
-	//     Display the faces of the solution
+	//   Scramble cube starting position
+	//   Create the cube faces and display them, 6 faces 3x3 in one row
+	//   Perform IDA* (IDDFS with pruning)
+	//   tabulate the results:  solution time and 1/4 turn metric (QTM)
+	//   Display the faces of the solution
 }
 
 int main(int argc, char *argv[]) {
@@ -1368,7 +1393,7 @@ int main(int argc, char *argv[]) {
 		if ((trials < min_trials) || (trials > max_trials)) {
 			result << "trials not in [" << min_trials << "," << max_trials << "], ";
 		}
-		if ((prune != "y") || (prune != "n")) {
+		if ((prune != "y") && (prune != "n")) {
 			result << "prune is not 'y' or 'n'" << "\n";
 		}
 		if (result.str().size() > 0) {
