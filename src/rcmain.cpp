@@ -21,6 +21,7 @@
  */
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include "rcmain.h"
 #include <vector>
 #include <cstdlib>
@@ -430,7 +431,7 @@ void Cube::scrambleCube(int nmoves)
 	for (int i = 0; i < nmoves; ++i) {
 		// random selection of move
 		rotate mv = revRotate[std::rand() % MOVES];
-		//rotate mv = rotate::B_;
+		//rotate mv = rotate::B2;
 		doMove(mv);
 		// push to move queue for later display
 		mvQueue.push(mv);
@@ -502,7 +503,9 @@ void Cube::displayCubeFaces()
 	//108: background white 0x70
 	//124: background gray 0x80
 
-	// map geometric density to windows color attribute
+	// map cube color to windows color attribute
+	// Up=white, Down=yellow, Left=green, Right=blue,
+	// Front=red, Back=orange
 
 	// colors not in wincon.h
 	enum Color : int {
@@ -618,7 +621,6 @@ void Cube::tabulateTestResults()
 	// reversing the reverse order in buffer
 	for (auto revit = buf.rbegin(); revit != buf.rend(); ++revit) {
 		mvQueue.push(*revit);
-		//std::cout << rot2char[static_cast<int>(*revit)] << " ";
 	}
 }
 
@@ -855,19 +857,19 @@ void Cube::createCubeFaces(bool init)
 			// L, rotate B,D,F,U col 0 down
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][i][0] = facelets[static_cast<uint8_t>(face::B)][i][0];
+				facelets[static_cast<uint8_t>(face::U)][i][DIM-1] = facelets[static_cast<uint8_t>(face::B)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::B)][i][0] = facelets[static_cast<uint8_t>(face::D)][i][0];
+				facelets[static_cast<uint8_t>(face::B)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
 				facelets[static_cast<uint8_t>(face::D)][i][0] = facelets[static_cast<uint8_t>(face::F)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::F)][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][i][0] = prev[DIM-1-i];
 			}
 			break;
 		/**********************************************************************/
@@ -886,19 +888,19 @@ void Cube::createCubeFaces(bool init)
 			// L_, rotate F,D,B,U col 0 up
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][i][0] = facelets[static_cast<uint8_t>(face::F)][i][0];
+				facelets[static_cast<uint8_t>(face::U)][i][DIM-1] = facelets[static_cast<uint8_t>(face::F)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
 				facelets[static_cast<uint8_t>(face::F)][i][0] = facelets[static_cast<uint8_t>(face::D)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][i][0] = facelets[static_cast<uint8_t>(face::B)][i][0];
+				facelets[static_cast<uint8_t>(face::D)][i][0] = facelets[static_cast<uint8_t>(face::B)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::B)][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::B)][i][DIM-1] = prev[i];
 			}
 			break;
 		/**********************************************************************/
@@ -916,24 +918,24 @@ void Cube::createCubeFaces(bool init)
 			// L2, swap U-D col 0
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][i][0] = facelets[static_cast<uint8_t>(face::D)][i][0];
+				facelets[static_cast<uint8_t>(face::U)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::D)][DIM-1-i][0] = prev[i];
 			}
 			// L2, swap B-F col 0
 			// previous = B
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::B)][i][0];
+				prev[i] = facelets[static_cast<uint8_t>(face::B)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::B)][i][0] = facelets[static_cast<uint8_t>(face::F)][i][0];
+				facelets[static_cast<uint8_t>(face::B)][i][DIM-1] = facelets[static_cast<uint8_t>(face::F)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::F)][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][i][0] = prev[DIM-1-i];
 			}
 			break;
 		/**********************************************************************/
@@ -952,19 +954,19 @@ void Cube::createCubeFaces(bool init)
 			// R, rotate F,D,B,U col 2 up
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][DIM-1];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][i][DIM-1] = facelets[static_cast<uint8_t>(face::F)][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][i][0] = facelets[static_cast<uint8_t>(face::F)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
 				facelets[static_cast<uint8_t>(face::F)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][i][DIM-1] = facelets[static_cast<uint8_t>(face::B)][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::D)][i][DIM-1] = facelets[static_cast<uint8_t>(face::B)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::B)][i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::B)][i][0] = prev[i];
 			}
 			break;
 		/**********************************************************************/
@@ -983,19 +985,19 @@ void Cube::createCubeFaces(bool init)
 			// R_, rotate B,D,F,U col 2 down
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][DIM-1];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][i][DIM-1] = facelets[static_cast<uint8_t>(face::B)][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][i][0] = facelets[static_cast<uint8_t>(face::B)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::B)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::B)][i][0] = facelets[static_cast<uint8_t>(face::D)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
 				facelets[static_cast<uint8_t>(face::D)][i][DIM-1] = facelets[static_cast<uint8_t>(face::F)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::F)][i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][i][DIM-1] = prev[DIM-1-i];
 			}
 			break;
 		/**********************************************************************/
@@ -1013,13 +1015,13 @@ void Cube::createCubeFaces(bool init)
 			// R2, swap U-D col 2
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][DIM-1];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][i][0] = facelets[static_cast<uint8_t>(face::D)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::D)][i][DIM-1] = prev[DIM-1-i];
 			}
 			// R2, swap B-F col 2
 			// previous = B
@@ -1027,10 +1029,10 @@ void Cube::createCubeFaces(bool init)
 				prev[i] = facelets[static_cast<uint8_t>(face::B)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::B)][i][0] = facelets[static_cast<uint8_t>(face::F)][i][0];
+				facelets[static_cast<uint8_t>(face::B)][i][0] = facelets[static_cast<uint8_t>(face::F)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::F)][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::F)][i][DIM-1] = prev[DIM-1-i];
 			}
 			break;
 		/**********************************************************************/
@@ -1049,19 +1051,19 @@ void Cube::createCubeFaces(bool init)
 			// F, rotate L col 2 up, D row 2 left, R col 0 down,  U row 2 right
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][DIM-1-i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][0][i] = facelets[static_cast<uint8_t>(face::L)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::L)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][DIM-1][i];
+				facelets[static_cast<uint8_t>(face::L)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][0];
+				facelets[static_cast<uint8_t>(face::D)][0][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::R)][i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][i][0] = prev[DIM-1-i];
 			}
 			break;
 		/**********************************************************************/
@@ -1080,19 +1082,19 @@ void Cube::createCubeFaces(bool init)
 			// F_, rotate R col 0 up, D row 2 right, L col 2 down, U row 2 left
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][i][0];
+				facelets[static_cast<uint8_t>(face::U)][0][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::R)][i][0] = facelets[static_cast<uint8_t>(face::D)][DIM-1][DIM-1-i];
+				facelets[static_cast<uint8_t>(face::R)][i][0] = facelets[static_cast<uint8_t>(face::D)][0][DIM-1-i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::D)][0][i] = facelets[static_cast<uint8_t>(face::L)][i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::L)][DIM-1-i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::L)][i][DIM-1] = prev[i];
 			}
 			break;
 		/**********************************************************************/
@@ -1121,13 +1123,13 @@ void Cube::createCubeFaces(bool init)
 			// F2, swap Urow2-Drow2
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::D)][DIM-1][DIM-1-i];
+				facelets[static_cast<uint8_t>(face::U)][0][i] = facelets[static_cast<uint8_t>(face::D)][0][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][DIM-1][DIM-1-i] = prev[i];
+				facelets[static_cast<uint8_t>(face::D)][0][i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
@@ -1146,19 +1148,19 @@ void Cube::createCubeFaces(bool init)
 			// B, rotate R col 2 up, D row 0 left, L col 0 down, U row 0 right
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][0][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][0][i] = facelets[static_cast<uint8_t>(face::R)][i][DIM-1];
+				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::R)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][0][DIM-1-i];
+				facelets[static_cast<uint8_t>(face::R)][i][DIM-1] = facelets[static_cast<uint8_t>(face::D)][DIM-1][DIM-1-i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][0][i] = facelets[static_cast<uint8_t>(face::L)][i][0];
+				facelets[static_cast<uint8_t>(face::D)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::L)][DIM-1-i][0] = prev[i];
+				facelets[static_cast<uint8_t>(face::L)][i][0] = prev[i];
 			}
 			break;
 		/**********************************************************************/
@@ -1177,19 +1179,19 @@ void Cube::createCubeFaces(bool init)
 			// B_, rotate L col 0 up, D row 0 right, R col 2 down, U row 0 left
 			// previous =
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][0][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][0][i] = facelets[static_cast<uint8_t>(face::L)][DIM-1-i][0];
+				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::L)][i][0];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::L)][i][0] = facelets[static_cast<uint8_t>(face::D)][0][i];
+				facelets[static_cast<uint8_t>(face::L)][i][0] = facelets[static_cast<uint8_t>(face::D)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][0][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][DIM-1];
+				facelets[static_cast<uint8_t>(face::D)][DIM-1][i] = facelets[static_cast<uint8_t>(face::R)][DIM-1-i][DIM-1];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::R)][i][DIM-1] = prev[i];
+				facelets[static_cast<uint8_t>(face::R)][DIM-1-i][DIM-1] = prev[i];
 			}
 			break;
 		/**********************************************************************/
@@ -1218,13 +1220,13 @@ void Cube::createCubeFaces(bool init)
 			// B2, swap Urow0-Drow0
 			// previous = U
 			for (int i = 0; i < DIM; ++i) {
-				prev[i] = facelets[static_cast<uint8_t>(face::U)][0][i];
+				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::U)][0][i] = facelets[static_cast<uint8_t>(face::D)][0][DIM-1-i];
+				facelets[static_cast<uint8_t>(face::U)][DIM-1][i] = facelets[static_cast<uint8_t>(face::D)][DIM-1][i];
 			}
 			for (int i = 0; i < DIM; ++i) {
-				facelets[static_cast<uint8_t>(face::D)][0][DIM-1-i] = prev[i];
+				facelets[static_cast<uint8_t>(face::D)][DIM-1][i] = prev[i];
 			}
 			break;
 		/**********************************************************************/
@@ -1262,7 +1264,7 @@ void Cube::performIDAstar()
 		if IsSolved(cube) then
 		  return True;
 		end if
-		for move={U , U’, U2, ..., D, D’, D2} do // Loop trough all possible moves
+		for move={U , U’, U2, ..., D, D’, D2} do // Loop through all possible moves
 			ApplyMove (cube,move)
 			moveStack.push(move)
 			if IDA_Iteration(cube,depth + 1, bound) == True then
@@ -1280,6 +1282,225 @@ void Cube::performIDAstar()
 inline void Cube::doMove(rotate rot)
 {
 	(this->*cubefcn[int(rot)])();
+}
+
+// embed cube faces into the 3D scatterplot cube
+// Up/Down face maps to z-axis planes 0, 47
+void Cube::embedUD(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
+{
+	// Duplicate for Up and Down face
+
+    // Left/Right to X-axis, Front/Back to Y-axis, Up/Down to -Z-axis
+    // Add 1 to the enum::color value, 1-6 instead of 0-5
+    // Insert the facelet color in the 16x16 area of the plane of the 3D cube
+    // facelet borders:  (0, 15), (16, 31), (32, 47)
+
+	// width and height of facelets
+	int spc = 16;
+	// loop over row facelets, 0,1,2
+	for (int rowfacelt = 0; rowfacelt < DIM; ++rowfacelt) {
+        // set start,stop row for this facelet: (0, 16, 32)
+		int rowfacestart = rowfacelt*spc;
+		int rowfacestop = rowfacestart + spc;
+	    // loop over column facelets, 0,1,2
+		for (int colfacelt = 0; colfacelt < DIM; ++colfacelt) {
+	        // set start,stop column for this facelet: (0, 16, 32)
+			int colfacestart = colfacelt*spc;
+			int colfacestop = colfacestart + spc;
+		    // Add 1 to the enum::color value, 1-6 instead of 0-5
+			uint8_t clr1 = facelets[static_cast<uint8_t>(face::D)][rowfacelt][colfacelt] + 1;
+			uint8_t clr2 = facelets[static_cast<uint8_t>(face::U)][rowfacelt][colfacelt] + 1;
+		    // loop delta row, duplicate 16x this color over rows
+			for (int row = rowfacestart; row < rowfacestop; ++row) {
+			    // loop delta col, duplicate 16x this color over cols
+				for (int col = colfacestart; col < colfacestop; ++col) {
+					// set color from facelet[U|D][row][col] to cube3D[0|47][row][col]
+					cube3D[0][row][col] = clr1;
+					cube3D[DIM3D-1][row][col] = clr2;
+				}
+			}
+		}
+	}
+
+	// set black borders around facelets rows/cols at: 0, 15, 16, 31, 32, 47
+	// for row in (0,15,16,31,32,47)
+	for (int row : {0, 15, 16, 31, 32, 47}) {
+	  // loop over cols of cube3D
+		for (int col = 0; col < DIM3D; ++col) {
+			// set cube3D[0|47][row][col] to black
+			cube3D[0][row][col] = black;
+			cube3D[DIM3D-1][row][col] = black;
+		}
+	}
+	// for col in (0,15,16,31,32,47)
+	for (int col : {0, 15, 16, 31, 32, 47}) {
+		// loop over rows of cube3D
+		for (int row = 0; row < DIM3D; ++row) {
+		    // set cube3D[0|47][row][col] to black
+			cube3D[0][row][col] = black;
+			cube3D[DIM3D-1][row][col] = black;
+		}
+	}
+}
+
+// Left/Right face maps to x-axis planes 0, 47
+void Cube::embedLR(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
+{
+	// Duplicate for Left and Right face
+
+    // Left/Right to X-axis, Front/Back to Y-axis, Up/Down to -Z-axis
+    // Add 1 to the enum::color value, 1-6 instead of 0-5
+    // Insert the facelet color in the 16x16 area of the plane of the 3D cube
+    // facelet borders:  (0, 15), (16, 31), (32, 47)
+
+	// width and height of facelets
+	int spc = 16;
+	// loop over row facelets, 0,1,2
+	for (int rowfacelt = 0; rowfacelt < DIM; ++rowfacelt) {
+        // set start,stop row for this facelet: (0, 16, 32)
+		int rowfacestart = rowfacelt*spc;
+		int rowfacestop = rowfacestart + spc;
+	    // loop over column facelets, 0,1,2
+		for (int colfacelt = 0; colfacelt < DIM; ++colfacelt) {
+	        // set start,stop column for this facelet: (0, 16, 32)
+			int colfacestart = colfacelt*spc;
+			int colfacestop = colfacestart + spc;
+		    // Add 1 to the enum::color value, 1-6 instead of 0-5
+			uint8_t clr1 = facelets[static_cast<uint8_t>(face::L)][rowfacelt][colfacelt] + 1;
+			uint8_t clr2 = facelets[static_cast<uint8_t>(face::R)][rowfacelt][colfacelt] + 1;
+		    // loop delta row, duplicate 16x this color over rows
+			for (int row = rowfacestart; row < rowfacestop; ++row) {
+			    // loop delta col, duplicate 16x this color over cols
+				for (int col = colfacestart; col < colfacestop; ++col) {
+					// set color from facelet[U|D][row][col] to cube3D[0|47][row][col]
+					cube3D[row][col][0] = clr1;
+					cube3D[row][col][DIM3D-1] = clr2;
+				}
+			}
+		}
+	}
+
+	// set black borders around facelets rows/cols at: 0, 15, 16, 31, 32, 47
+	// for row in (0,15,16,31,32,47)
+	for (int row : {0, 15, 16, 31, 32, 47}) {
+	  // loop over cols of cube3D
+		for (int col = 0; col < DIM3D; ++col) {
+			// set cube3D[0|47][row][col] to black
+			cube3D[row][col][0] = black;
+			cube3D[row][col][DIM3D-1] = black;
+		}
+	}
+	// for col in (0,15,16,31,32,47)
+	for (int col : {0, 15, 16, 31, 32, 47}) {
+		// loop over rows of cube3D
+		for (int row = 0; row < DIM3D; ++row) {
+		    // set cube3D[0|47][row][col] to black
+			cube3D[row][col][0] = black;
+			cube3D[row][col][DIM3D-1] = black;
+		}
+	}
+}
+
+// Front/Back face maps to y-axis planes 0, 47
+void Cube::embedFB(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
+{
+	// Duplicate for Front and Back face
+
+    // Left/Right to X-axis, Front/Back to Y-axis, Up/Down to -Z-axis
+    // Add 1 to the enum::color value, 1-6 instead of 0-5
+    // Insert the facelet color in the 16x16 area of the plane of the 3D cube
+    // facelet borders:  (0, 15), (16, 31), (32, 47)
+
+	// width and height of facelets
+	int spc = 16;
+	// loop over row facelets, 0,1,2
+	for (int rowfacelt = 0; rowfacelt < DIM; ++rowfacelt) {
+        // set start,stop row for this facelet: (0, 16, 32)
+		int rowfacestart = rowfacelt*spc;
+		int rowfacestop = rowfacestart + spc;
+	    // loop over column facelets, 0,1,2
+		for (int colfacelt = 0; colfacelt < DIM; ++colfacelt) {
+	        // set start,stop column for this facelet: (0, 16, 32)
+			int colfacestart = colfacelt*spc;
+			int colfacestop = colfacestart + spc;
+		    // Add 1 to the enum::color value, 1-6 instead of 0-5
+			uint8_t clr1 = facelets[static_cast<uint8_t>(face::B)][rowfacelt][colfacelt] + 1;
+			uint8_t clr2 = facelets[static_cast<uint8_t>(face::F)][rowfacelt][colfacelt] + 1;
+		    // loop delta row, duplicate 16x this color over rows
+			for (int row = rowfacestart; row < rowfacestop; ++row) {
+			    // loop delta col, duplicate 16x this color over cols
+				for (int col = colfacestart; col < colfacestop; ++col) {
+					// set color from facelet[U|D][row][col] to cube3D[0|47][row][col]
+					cube3D[row][0][col] = clr1;
+					cube3D[row][DIM3D-1][col] = clr2;
+				}
+			}
+		}
+	}
+
+	// set black borders around facelets rows/cols at: 0, 15, 16, 31, 32, 47
+	// for row in (0,15,16,31,32,47)
+	for (int row : {0, 15, 16, 31, 32, 47}) {
+	  // loop over cols of cube3D
+		for (int col = 0; col < DIM3D; ++col) {
+			// set cube3D[0|47][row][col] to black
+			cube3D[row][0][col] = black;
+			cube3D[row][DIM3D-1][col] = black;
+		}
+	}
+	// for col in (0,15,16,31,32,47)
+	for (int col : {0, 15, 16, 31, 32, 47}) {
+		// loop over rows of cube3D
+		for (int row = 0; row < DIM3D; ++row) {
+		    // set cube3D[0|47][row][col] to black
+			cube3D[row][0][col] = black;
+			cube3D[row][DIM3D-1][col] = black;
+		}
+	}
+}
+
+// Convert facelets[][][] to a 3D cube for a matplotlib.pyplot scatterplot and save .txt
+void Cube::create3Dcube(const std::string &file)
+{
+	// Create a realistic-looking Rubik's cube for matplotlib
+	// Map each Rubik Cube face to a 48x48 plane in a 3D cube
+	// The planes are the 0 and 47 edges of the 3D cube, thus creating a surface
+	// Expand each facelet to occupy 16x16 elements of the 3D cube in the corresponding plane
+	// Draw black borders separating the facelets: 4 horizontal and 4 vertical
+
+	// create uint8_t cube3D[DIM3D][DIM3D][DIM3D] and initialize elements to 0
+	uint8_t cube3D[DIM3D][DIM3D][DIM3D];
+	for (int i = 0; i < DIM3D; ++i) {
+		for (int j = 0; j < DIM3D; ++j) {
+			for (int k = 0; k < DIM3D; ++k) {
+				cube3D[i][j][k] = 0;
+			}
+		}
+	}
+
+	embedUD(cube3D);
+	embedLR(cube3D);
+	embedFB(cube3D);
+
+	// Save the cube to rubikcube_scrambled.txt or rubikcube_solved.txt
+	std::fstream fcube3D;
+	// Save the cube to a file
+	fcube3D.open(file.c_str(), std::fstream::out);
+	if (!fcube3D.is_open()) {
+		std::cout << "cannot open file " + file << std::endl;
+		throw std::runtime_error("cannot open file " + file);
+	}
+
+	for (const auto &dim1 : cube3D) {
+		for (const auto &dim2 : dim1) {
+			for (int dim3 : dim2) {
+				fcube3D << dim3 << " ";
+			}
+			fcube3D << std::endl;
+		}
+	}
+	fcube3D.close();
+
 }
 
 // recurse the cube state tree with DFS
@@ -1310,35 +1531,65 @@ bool Cube::boundDFS(int depth, int bound)
 	return false;
 }
 
-// run IDA, IDDFS, Iterative Deepening Depth First Search
+// run IDDFS, Iterative Deepening Depth First Search
 void Cube::performIDA()
 {
 	int depth = 0;
 	int bound = 1;
+	std::cout << "search bound = " << bound << std::endl;
 	while (!boundDFS(depth, bound)) {
 		++bound;
+		std::cout << "search bound = " << bound << std::endl;
 	}
 }
 
 void handleIDA(int trials, int moves)
 {
-	// create a cube with the trials and maxTwists
+	// create a cube with the trials and moves
 	Cube cube(trials, moves);
+
+    // show start, end, and elapsed times
+    time_t rawtime1;
+    time_t rawtime2;
+    struct tm *timeinfo;
+
 	// loop over the trials
 	for (int tri = 0; tri < trials; ++tri) {
+		// start time
+	    time(&rawtime1);
+	    timeinfo = localtime (&rawtime1);
+	    std::cout << std::string("Start local time and date: ") << std::string(asctime(timeinfo)) << std::endl;
+
 		// Scramble cube starting position and save moves
 		cube.scrambleCube(moves);
+
 		// Create the cube faces using saved moves
 		// and display them, 6 faces 3x3 in one row
 		cube.createCubeFaces(true);
 		cube.displayCubeFaces();
+
+		// Save the scrambled cube for 3D scatterplot in matplotlib.pyplot
+		cube.create3Dcube(rubik_scrambled);
+
 		// Perform IDA()
 		cube.performIDA();
+
 		// tabulate the results:  solution time and 1/4 turn metric (QTM)
 		cube.tabulateTestResults();
+
 		// Create and Display the faces of the solution
 		cube.createCubeFaces(false);
 		cube.displayCubeFaces();
+
+		// Save the solution cube for 3D scatterplot in matplotlib.pyplot
+		cube.create3Dcube(rubik_solved);
+
+		// end time, elapsed time
+	    time(&rawtime2);
+	    timeinfo = localtime (&rawtime2);
+	    std::cout << std::string("Finish local time and date: ") << std::string(asctime(timeinfo)) << std::endl;
+	    double seconds = std::difftime(rawtime2,rawtime1);
+	    std::cout << "Elapsed time: " << seconds << " seconds\n";
 	}
 }
 
@@ -1347,7 +1598,7 @@ void handleIDAstar(int trials, int moves)
 	// create a cube
 	// create pattern databases if necessary
 	// read in the three pattern databases:  corners1-8, edges1-6, edges 7-12
-	// create a cube with the maxTwists and trials
+	// create a cube with the moves and trials
 	// loop over the trials
 	//   Scramble cube starting position
 	//   Create the cube faces and display them, 6 faces 3x3 in one row

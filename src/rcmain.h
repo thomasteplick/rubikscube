@@ -21,8 +21,16 @@ const int DIM = 3;
 // number of moves for the Rubik's cube, rotating the faces CW or CCW
 const int MOVES = 18;
 
+// 3D scatterplot cube dimension
+const int DIM3D = 48;
+
+const std::string rubik_scrambled{"..\\data\\rubik_scrambled.txt"};
+const std::string rubik_solved{"..\\data\\rubik_solved.txt"};
+
 // number of faces in the cube
 const int NFACES = 6;
+
+const uint8_t black = 7;
 
 enum class color : uint8_t {WHITE, YELLOW, RED, ORANGE, GREEN, BLUE};
 // corner has 3 facelets, edge has 2 facelets, center has 1 facelet
@@ -49,6 +57,7 @@ private:
 	uint8_t facelets[NFACES][DIM][DIM];
 	int ntrials;
 	int maxTwists;
+
 	// moves done while performing DFS
 	std::stack<rotate> rotStack;
 	// scramble moves and save for display
@@ -57,6 +66,9 @@ private:
 	bool isSolved();
 	bool boundDFS(int depth, int bound);
 	inline void doMove(rotate move);
+	void embedUD(uint8_t cube3D[DIM3D][DIM3D][DIM3D]);
+	void embedLR(uint8_t cube3D[DIM3D][DIM3D][DIM3D]);
+	void embedFB(uint8_t cube3D[DIM3D][DIM3D][DIM3D]);
 
 	// cube face moves, twists CW 90deg, CCW 90deg, 180deg
 	// Up face
@@ -114,7 +126,7 @@ private:
 
 	// reverse rotate a face, the order must be the reverse rotation of enum rotate
 	std::vector<rotate> revRotate{rotate::U_, rotate::U, rotate::U2, rotate::D_, rotate::D, rotate::D2,
-								  rotate::L_, rotate::L, rotate::L2, rotate::R_,rotate::R, rotate::R2,
+								  rotate::L_, rotate::L, rotate::L2, rotate::R_, rotate::R, rotate::R2,
 								  rotate::F_, rotate::F, rotate::F2, rotate::B_, rotate::B, rotate::B2};
 
 public:
@@ -132,6 +144,7 @@ public:
 	void performIDA();
 	void performIDAstar();
 	void tabulateTestResults();
+	void create3Dcube(const std::string &file);
 
 };
 
