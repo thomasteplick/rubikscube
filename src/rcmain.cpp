@@ -1330,15 +1330,8 @@ void Cube::embedUD(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 			// set cube3D[0|47][row][col] to black
 			cube3D[row][col][0] = black;
 			cube3D[row][col][DIM3D-1] = black;
-		}
-	}
-	// for col in (0,15,16,31,32,47)
-	for (int col : {0, 15, 16, 31, 32, 47}) {
-		// loop over rows of cube3D
-		for (int row = 0; row < DIM3D; ++row) {
-		    // set cube3D[0|47][row][col] to black
-			cube3D[row][col][0] = black;
-			cube3D[row][col][DIM3D-1] = black;
+			cube3D[col][row][0] = black;
+			cube3D[col][row][DIM3D-1] = black;
 		}
 	}
 }
@@ -1388,15 +1381,8 @@ void Cube::embedLR(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 			// set cube3D[0|47][row][col] to black
 			cube3D[0][row][col] = black;
 			cube3D[DIM3D-1][row][col] = black;
-		}
-	}
-	// for col in (0,15,16,31,32,47)
-	for (int col : {0, 15, 16, 31, 32, 47}) {
-		// loop over rows of cube3D
-		for (int row = 0; row < DIM3D; ++row) {
-		    // set cube3D[0|47][row][col] to black
-			cube3D[0][row][col] = black;
-			cube3D[DIM3D-1][row][col] = black;
+			cube3D[0][col][row] = black;
+			cube3D[DIM3D-1][col][row] = black;
 		}
 	}
 }
@@ -1446,15 +1432,8 @@ void Cube::embedFB(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 			// set cube3D[0|47][row][col] to black
 			cube3D[row][0][col] = black;
 			cube3D[row][DIM3D-1][col] = black;
-		}
-	}
-	// for col in (0,15,16,31,32,47)
-	for (int col : {0, 15, 16, 31, 32, 47}) {
-		// loop over rows of cube3D
-		for (int row = 0; row < DIM3D; ++row) {
-		    // set cube3D[0|47][row][col] to black
-			cube3D[row][0][col] = black;
-			cube3D[row][DIM3D-1][col] = black;
+			cube3D[col][0][row] = black;
+			cube3D[col][DIM3D-1][row] = black;
 		}
 	}
 }
