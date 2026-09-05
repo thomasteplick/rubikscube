@@ -1315,8 +1315,8 @@ void Cube::embedUD(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 			    // loop delta col, duplicate 16x this color over cols
 				for (int col = colfacestart; col < colfacestop; ++col) {
 					// set color from facelet[U|D][row][col] to cube3D[0|47][row][col]
-					cube3D[0][row][col] = clr1;
-					cube3D[DIM3D-1][row][col] = clr2;
+					cube3D[row][col][0] = clr1;
+					cube3D[row][col][DIM3D-1] = clr2;
 				}
 			}
 		}
@@ -1328,8 +1328,8 @@ void Cube::embedUD(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 	  // loop over cols of cube3D
 		for (int col = 0; col < DIM3D; ++col) {
 			// set cube3D[0|47][row][col] to black
-			cube3D[0][row][col] = black;
-			cube3D[DIM3D-1][row][col] = black;
+			cube3D[row][col][0] = black;
+			cube3D[row][col][DIM3D-1] = black;
 		}
 	}
 	// for col in (0,15,16,31,32,47)
@@ -1337,8 +1337,8 @@ void Cube::embedUD(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 		// loop over rows of cube3D
 		for (int row = 0; row < DIM3D; ++row) {
 		    // set cube3D[0|47][row][col] to black
-			cube3D[0][row][col] = black;
-			cube3D[DIM3D-1][row][col] = black;
+			cube3D[row][col][0] = black;
+			cube3D[row][col][DIM3D-1] = black;
 		}
 	}
 }
@@ -1373,8 +1373,8 @@ void Cube::embedLR(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 			    // loop delta col, duplicate 16x this color over cols
 				for (int col = colfacestart; col < colfacestop; ++col) {
 					// set color from facelet[U|D][row][col] to cube3D[0|47][row][col]
-					cube3D[row][col][0] = clr1;
-					cube3D[row][col][DIM3D-1] = clr2;
+					cube3D[0][row][col] = clr1;
+					cube3D[DIM3D-1][row][col] = clr2;
 				}
 			}
 		}
@@ -1386,8 +1386,8 @@ void Cube::embedLR(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 	  // loop over cols of cube3D
 		for (int col = 0; col < DIM3D; ++col) {
 			// set cube3D[0|47][row][col] to black
-			cube3D[row][col][0] = black;
-			cube3D[row][col][DIM3D-1] = black;
+			cube3D[0][row][col] = black;
+			cube3D[DIM3D-1][row][col] = black;
 		}
 	}
 	// for col in (0,15,16,31,32,47)
@@ -1395,8 +1395,8 @@ void Cube::embedLR(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 		// loop over rows of cube3D
 		for (int row = 0; row < DIM3D; ++row) {
 		    // set cube3D[0|47][row][col] to black
-			cube3D[row][col][0] = black;
-			cube3D[row][col][DIM3D-1] = black;
+			cube3D[0][row][col] = black;
+			cube3D[DIM3D-1][row][col] = black;
 		}
 	}
 }
@@ -1431,8 +1431,8 @@ void Cube::embedFB(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 			    // loop delta col, duplicate 16x this color over cols
 				for (int col = colfacestart; col < colfacestop; ++col) {
 					// set color from facelet[U|D][row][col] to cube3D[0|47][row][col]
-					cube3D[row][0][col] = clr1;
-					cube3D[row][DIM3D-1][col] = clr2;
+					cube3D[row][DIM3D-1][col] = clr1;
+					cube3D[row][0][col] = clr2;
 				}
 			}
 		}
