@@ -3,15 +3,13 @@
 // Author      : Tom Teplick
 // Version     :
 // Copyright   : 
-// Description : Solve 3x3 Rubik's Cube using IDA and IDA* Richard Korf algorithm, display cube
+// Description : Solve 3x3 Rubik's Cube using IDA, Richard Korf algorithm, display cube
 //============================================================================
 
 /*
  * Use cases:
- * Create pattern databases for  1@8 corners and 2@6 edges
  * Scramble cube starting position and display 6 faces for each twist
  * Perform IDA, iterative deepening of DFS
- * Perform IDA* using pattern databases
  * Perform K trials for 1 to N twists, save solution times and number of twists in table
  * Map Cube state to faces (facelet colors) and display unfolded cube (the faces)
  * Map Cube state via faces to 3D scatterplot in matplotlib
@@ -436,40 +434,6 @@ void Cube::scrambleCube(int nmoves)
 		// push to move queue for later display
 		mvQueue.push(mv);
 	}
-}
-
-// Create pattern databases, 1@8corners, 2@6edges
-void Cube::createPatternDB()
-{
-/*
-	Algorithm 2 Generate Lookup Table
-	foundStates <- 0
-	lookupTable <- array[numStates]{−1, −1, . . . , −1}
-	function GenerateLookupTable
-		bound <- 0
-		while not foundStates == numStates do
-			boundedDFS (solvedCubeState, 0, bound)
-			bound <- bound + 1
-		end while
-		return moveStack
-	end function
-
-	function boundedDFS(cube, depth, bound)
-		if depth > bound then
-		return
-		end if
-		index <- calculateIndex (cube)
-		if lookupTable[index] == -1 then ⊲ Set the entry when not set yet
-			lookupTable [index] <- depth
-		end if
-		for move={U , U’, U2, ..., D, D’, D2} do ⊲ Loop trough all possible moves
-			ApplyMove (cube,move)
-			BoundedDFS(cube, bound, depth + 1)
-			ApplyMove (cube, Inverse (move))
-		end for
-	end function
-
- */
 }
 
 // Display the cube faces using Windows color attributes
@@ -1238,47 +1202,6 @@ void Cube::createCubeFaces(bool init)
 	std::cout << "\n";
 }
 
-// run IDA*, IDDFS with pruning, Richard Korf algorithm
-void Cube::performIDAstar()
-{
-    /*
-	function Iterative Deepening A*(cube)
-		moveStack <- []
-		bound <- GetHeuristic (cube)
-		while IDA_Iteration(cube, 0, bound) == False do ⊲ As long as no solution is found
-			bound = nextBound
-			nextBound = Max_Value // Let this be accessible for IDA_Iteration
-		end while
-		return moveStack
-	end function
-
-	function IDA_Iteration(cube, depth, bound)
-		estimatedMoves  <- GetHeuristic(cube) + depth
-		if estimatedMoves > bound then
-		  return False;
-		else
-		  if estimatedMoves < nextBound then
-		    nextBound <- estimatedMoves
-		  end if
-		end if
-		if IsSolved(cube) then
-		  return True;
-		end if
-		for move={U , U’, U2, ..., D, D’, D2} do // Loop through all possible moves
-			ApplyMove (cube,move)
-			moveStack.push(move)
-			if IDA_Iteration(cube,depth + 1, bound) == True then
-			    return True;
-			end if
-			moveStack.pop()
-			ApplyMove (cube, Inverse(move))
-		end for
-		return False
-	end function
-    */
-
-}
-
 inline void Cube::doMove(rotate rot)
 {
 	(this->*cubefcn[int(rot)])();
@@ -1315,8 +1238,8 @@ void Cube::embedUD(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 			    // loop delta col, duplicate 16x this color over cols
 				for (int col = colfacestart; col < colfacestop; ++col) {
 					// set color from facelet[U|D][row][col] to cube3D[0|47][row][col]
-					cube3D[row][col][0] = clr1;
-					cube3D[row][col][DIM3D-1] = clr2;
+					cube3D[col][DIM3D-1-row][0] = clr1;
+					cube3D[col][DIM3D-1-row][DIM3D-1] = clr2;
 				}
 			}
 		}
@@ -1366,8 +1289,8 @@ void Cube::embedLR(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 			    // loop delta col, duplicate 16x this color over cols
 				for (int col = colfacestart; col < colfacestop; ++col) {
 					// set color from facelet[U|D][row][col] to cube3D[0|47][row][col]
-					cube3D[0][row][col] = clr1;
-					cube3D[DIM3D-1][row][col] = clr2;
+					cube3D[0][col][DIM3D-1-row] = clr1;
+					cube3D[DIM3D-1][col][DIM3D-1-row] = clr2;
 				}
 			}
 		}
@@ -1414,11 +1337,11 @@ void Cube::embedFB(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 			uint8_t clr2 = facelets[static_cast<uint8_t>(face::F)][rowfacelt][colfacelt] + 1;
 		    // loop delta row, duplicate 16x this color over rows
 			for (int row = rowfacestart; row < rowfacestop; ++row) {
-			    // loop delta col, duplicate 16x this color over cols
+				// loop delta col, duplicate 16x this color over cols
 				for (int col = colfacestart; col < colfacestop; ++col) {
 					// set color from facelet[U|D][row][col] to cube3D[0|47][row][col]
-					cube3D[row][DIM3D-1][col] = clr1;
-					cube3D[row][0][col] = clr2;
+					cube3D[col][DIM3D-1][DIM3D-1-row] = clr1;
+					cube3D[col][0][DIM3D-1-row] = clr2;
 				}
 			}
 		}
@@ -1572,33 +1495,13 @@ void handleIDA(int trials, int moves)
 	}
 }
 
-void handleIDAstar(int trials, int moves)
-{
-	// create a cube
-	// create pattern databases if necessary
-	// read in the three pattern databases:  corners1-8, edges1-6, edges 7-12
-	// create a cube with the moves and trials
-	// loop over the trials
-	//   Scramble cube starting position
-	//   Create the cube faces and display them, 6 faces 3x3 in one row
-	//   Perform IDA* (IDDFS with pruning)
-	//   tabulate the results:  solution time and 1/4 turn metric (QTM)
-	//   Display the faces of the solution
-}
-
 int main(int argc, char *argv[]) {
 	// seed the random number generator so it changes over time
 	std::srand(time(NULL));
 
 	// use command line arguments
 	if (argc == 2) {
-		if (std::strcmp(argv[1], "1") == 0) {
-			handleIDA(1,1);
-		} else if (std::strcmp(argv[1], "2") == 0) {
-			handleIDAstar(1,1);
-		} else {
-			std::cout << "you entered invalid option " << argv[1] << std::endl;
-		}
+		handleIDA(1,1);
 	} else {
 		const int min_moves = 1;
 		const int max_moves = 10;
@@ -1606,7 +1509,6 @@ int main(int argc, char *argv[]) {
 		const int max_trials = 10;
 		int moves = 1;
 		int trials = 1;
-		std::string prune;
 		std::ostringstream result;
 		// Enter the number of moves
 		std::cout << "Enter the number of Rubik's Cube moves (1-10): ";
@@ -1614,27 +1516,18 @@ int main(int argc, char *argv[]) {
 		// Enter the number of trials
 		std::cout << "Enter the number of trials using the given number of moves (1-10): ";
 		std::cin >> trials;
-		// Enter IDA or IDA*
-		std::cout << "Use pruning tables (y/n): ";
-		std::cin >> prune;
 		if ((moves < min_moves) || (moves > max_moves)) {
 			result << "moves not in [" << min_moves << "," << max_moves << "], ";
 		}
 		if ((trials < min_trials) || (trials > max_trials)) {
 			result << "trials not in [" << min_trials << "," << max_trials << "], ";
 		}
-		if ((prune != "y") && (prune != "n")) {
-			result << "prune is not 'y' or 'n'" << "\n";
-		}
 		if (result.str().size() > 0) {
 			std::cout << result.str() << std::endl;
 			return 1;
 		}
-		if (prune == "y") {
-			handleIDAstar(trials, moves);
-		} else {
-			handleIDA(trials, moves);
-		}
+
+		handleIDA(trials, moves);
 
 	}
 	return 0;

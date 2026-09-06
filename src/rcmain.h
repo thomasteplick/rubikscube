@@ -50,7 +50,7 @@ struct Cubie {
 };
 
 
-// 3x3x3 cubies, 8-bit uint element = [0, 26], use for IDA and IDA*
+// 3x3x3 cubies, 8-bit uint element = [0, 26], use for IDA
 class Cube {
 private:
 	uint8_t cube[DIM][DIM][DIM];
@@ -137,19 +137,15 @@ public:
 	Cube(const Cube &&) = delete;
 	Cube & operator=(const Cube &&) = delete;
 
-	void createPatternDB();
 	void displayCubeFaces();
 	void scrambleCube(int twists);
 	void createCubeFaces(bool init);
 	void performIDA();
-	void performIDAstar();
 	void tabulateTestResults();
 	void create3Dcube(const std::string &file);
 
 };
 
 void handleIDA(int trials, int moves);
-
-void handleIDAstar(int trials, int moves);
 
 #endif /* RCMAIN_H_ */
