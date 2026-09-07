@@ -41,15 +41,6 @@ enum class face : uint8_t {L, B, D, F, R, U};
 // Rotations of the faces, or twists (90 deg, 180 deg): CW, CCW, CWCW
 enum class rotate : uint8_t {U, U_, U2, D, D_, D2, L, L_, L2, R, R_, R2, F, F_, F2, B, B_, B2};
 
-// a Cubie can be a corner, edge, or center position, cube = 3x3x3 cubies
-struct Cubie {
-	// 0-26, using x,y,z coordinates for home position cube
-	char num;
-	position pos;
-	color clr[DIM];
-};
-
-
 // 3x3x3 cubies, 8-bit uint element = [0, 26], use for IDA
 class Cube {
 private:
@@ -138,7 +129,7 @@ public:
 	Cube & operator=(const Cube &&) = delete;
 
 	void displayCubeFaces();
-	void scrambleCube(int twists);
+	void scrambleCube(int nmoves, const std::vector<std::string> &twists);
 	void createCubeFaces(bool init);
 	void performIDA();
 	void tabulateTestResults();
@@ -146,6 +137,6 @@ public:
 
 };
 
-void handleIDA(int trials, int moves);
+void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists = std::vector<std::string>());
 
 #endif /* RCMAIN_H_ */
