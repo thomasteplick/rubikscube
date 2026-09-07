@@ -3,13 +3,13 @@
 // Author      : Tom Teplick
 // Version     :
 // Copyright   : 
-// Description : Solve 3x3 Rubik's Cube using IDA, Richard Korf algorithm, display cube
+// Description : Solve 3x3 Rubik's Cube using IDDFS, Richard Korf algorithm, display cube
 //============================================================================
 
 /*
  * Use cases:
  * Scramble cube starting position and display 6 faces for each twist
- * Perform IDA, iterative deepening of DFS
+ * Perform Iterative Deepening Depth First Search (IDDFS)
  * Perform K trials for 1 to N twists, save solution times and number of twists in table
  * Map Cube state to faces (facelet colors) and display unfolded cube (the faces)
  * Map Cube state via faces to 3D scatterplot in matplotlib
@@ -22,6 +22,8 @@
 #include <fstream>
 #include "rcmain.h"
 #include <vector>
+#include <unordered_map>
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
@@ -408,8 +410,32 @@ bool Cube::isSolved()
 }
 
 // scramble solved cube with nmoves
-void Cube::scrambleCube(int nmoves)
+void Cube::scrambleCube(int nmoves, const std::vector<std::string> &twists)
 {
+	// convert string twists to rotate moves
+	// U, U_, U2, D, D_, D2, L, L_, L2, R, R_, R2, F, F_, F2, B, B_, B2
+	std::unordered_map<std::string, rotate> storot;
+	if (twists.size() > 0) {
+		storot["U"] = rotate::U;
+		storot["U'"] = rotate::U_;
+		storot["U2"] = rotate::U2;
+		storot["D"] = rotate::D;
+		storot["D'"] = rotate::D_;
+		storot["D2"] = rotate::D2;
+		storot["L"] = rotate::L;
+		storot["L'"] = rotate::L_;
+		storot["L2"] = rotate::L2;
+		storot["R"] = rotate::R;
+		storot["R'"] = rotate::R_;
+		storot["R2"] = rotate::R2;
+		storot["F"] = rotate::F;
+		storot["F'"] = rotate::F_;
+		storot["F2"] = rotate::F2;
+		storot["B"] = rotate::B;
+		storot["B'"] = rotate::B_;
+		storot["B2"] = rotate::B2;
+	}
+
 	uint8_t n = 0;
 	// initialize the cube order for the solved cube
 	for (int i = 0; i < DIM; ++i) {
@@ -425,10 +451,16 @@ void Cube::scrambleCube(int nmoves)
 	while (!mvQueue.empty()) {
 		mvQueue.pop();
 	}
+
+	rotate mv;
 	// loop over the number of requested twists
 	for (int i = 0; i < nmoves; ++i) {
-		// random selection of move
-		rotate mv = revRotate[std::rand() % MOVES];
+		if (twists.size() > 0) {
+			mv = storot[twists[i]];
+		} else {
+			// random selection of move
+			mv = revRotate[std::rand() % MOVES];
+		}
 		//rotate mv = rotate::B2;
 		doMove(mv);
 		// push to move queue for later display
@@ -1141,7 +1173,7 @@ void Cube::createCubeFaces(bool init)
 				}
 			}
 			// B_, rotate L col 0 up, D row 0 right, R col 2 down, U row 0 left
-			// previous =
+			// previous = U
 			for (int i = 0; i < DIM; ++i) {
 				prev[i] = facelets[static_cast<uint8_t>(face::U)][DIM-1][i];
 			}
@@ -1445,10 +1477,10 @@ void Cube::performIDA()
 	}
 }
 
-void handleIDA(int trials, int moves)
+void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 {
 	// create a cube with the trials and moves
-	Cube cube(trials, moves);
+	Cube cube(trials, nmoves);
 
     // show start, end, and elapsed times
     time_t rawtime1;
@@ -1463,7 +1495,7 @@ void handleIDA(int trials, int moves)
 	    std::cout << std::string("Start local time and date: ") << std::string(asctime(timeinfo)) << std::endl;
 
 		// Scramble cube starting position and save moves
-		cube.scrambleCube(moves);
+		cube.scrambleCube(nmoves, twists);
 
 		// Create the cube faces using saved moves
 		// and display them, 6 faces 3x3 in one row
@@ -1498,25 +1530,50 @@ void handleIDA(int trials, int moves)
 int main(int argc, char *argv[]) {
 	// seed the random number generator so it changes over time
 	std::srand(time(NULL));
+	const int min_moves = 1;
+	const int max_moves = 10;
+	int nmoves = 1;
+	std::ostringstream result;
 
-	// use command line arguments
-	if (argc == 2) {
-		handleIDA(1,1);
+	// use command line arguments to make the moves
+	if (argc > 1) {
+
+		// valid moves
+		const std::vector<std::string> twists{"U", "U'", "U2", "D", "D'", "D2", "L", "L'", "L2",
+										"R", "R'", "R2", "F", "F'", "F2", "B", "B'", "B2"};
+		std::vector<std::string> moves;
+
+		nmoves = argc-1;
+		if ((nmoves < min_moves) || (nmoves > max_moves)) {
+			result << "moves not in [" << min_moves << "," << max_moves << "], ";
+		}
+
+		for (int i = 1; i < argc; ++i) {
+			// verify move
+			auto twistit = std::find(twists.begin(), twists.end(), argv[i]);
+			if (twistit == twists.end()) {
+				result << argv[i] << " is not a valid move, ";
+			} else {
+				moves.push_back(argv[i]);
+			}
+		}
+		if (result.str().size() > 0) {
+			std::cout << result.str() << std::endl;
+			return 1;
+		}
+		handleIDA(1, nmoves, moves);
+
 	} else {
-		const int min_moves = 1;
-		const int max_moves = 10;
 		const int min_trials = 1;
 		const int max_trials = 10;
-		int moves = 1;
 		int trials = 1;
-		std::ostringstream result;
 		// Enter the number of moves
 		std::cout << "Enter the number of Rubik's Cube moves (1-10): ";
-		std::cin >> moves;
+		std::cin >> nmoves;
 		// Enter the number of trials
 		std::cout << "Enter the number of trials using the given number of moves (1-10): ";
 		std::cin >> trials;
-		if ((moves < min_moves) || (moves > max_moves)) {
+		if ((nmoves < min_moves) || (nmoves > max_moves)) {
 			result << "moves not in [" << min_moves << "," << max_moves << "], ";
 		}
 		if ((trials < min_trials) || (trials > max_trials)) {
@@ -1527,7 +1584,7 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
-		handleIDA(trials, moves);
+		handleIDA(trials, nmoves);
 
 	}
 	return 0;
