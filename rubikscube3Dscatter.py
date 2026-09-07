@@ -15,6 +15,7 @@ dim = 48
 # get file to plot the from command line
 parser = argparse.ArgumentParser(prog='scatter3D', description="3D Scatterplot of Rubik's cube")
 parser.add_argument('io', type=int, choices=[0,1])
+parser.add_argument('view', type=int, choices=[0,1])
 args = parser.parse_args()
 
 # scrambled cube, solved cube
@@ -61,9 +62,17 @@ with open(file[args.io], mode='r', encoding="utf-8") as f:
                 if (ival > 0):
                     #ax.scatter(np.array(i), np.array(j), np.array(k), marker=mkr, c=clrs[ival])
                     ax.scatter(i, j, k, marker=mkr, c=clrs[ival])
-                        
-ax.set_xlabel('Front face')
-ax.set_ylabel('Right face')
-ax.set_zlabel('Up face')
-plt.title("3D Scatterplot of Rubik's Cube, %s" % state[args.io])
+
+if (args.view == 0):
+    ax.set_xlabel('Front face')
+    ax.set_ylabel('Right face')
+    ax.set_zlabel('Up face')
+    plt.title("3D Scatterplot of Rubik's Cube, %s" % state[args.io])
+else:
+    ax.view_init(elev=-30, azim=135, roll=0)                       
+    ax.set_xlabel('Back face')
+    ax.set_ylabel('Left face')
+    ax.set_zlabel('Down face')
+    plt.title("3D Scatterplot of Rubik's Cube, %s" % state[args.io], pad=15)
+
 plt.show()
