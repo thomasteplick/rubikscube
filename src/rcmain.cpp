@@ -814,6 +814,16 @@ void Cube::createCubeFaces(bool init)
 			break;
 		/**********************************************************************/
 		case rotate::D2:
+			for (int i = 0; i < DIM; ++i) {
+				for (int j = 0; j < DIM; ++j) {
+					buf[DIM-1-j][DIM-1-i] = facelets[static_cast<uint8_t>(face::D)][j][i];
+				}
+			}
+			for (int i = 0; i < DIM; ++i) {
+				for (int j = 0; j < DIM; ++j) {
+					facelets[static_cast<uint8_t>(face::D)][j][i] = buf[j][i];
+				}
+			}
 			// D2, swap L-R row 2
 			// previous = L
 			for (int i = 0; i < DIM; ++i) {
