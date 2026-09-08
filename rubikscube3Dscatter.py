@@ -19,7 +19,7 @@ parser.add_argument('view', type=int, choices=[0,1])
 args = parser.parse_args()
 
 # scrambled cube, solved cube
-file = ["rubik_scrambled.txt", "rubik_solved.txt"]
+file = ["..\\data\\rubik_scrambled.txt", "..\\data\\rubik_solved.txt"]
 state = ["scrambled", "solved"]
 
 fig = plt.figure()
