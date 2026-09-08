@@ -1499,10 +1499,6 @@ void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 
 	// loop over the trials
 	for (int tri = 0; tri < trials; ++tri) {
-		// start time
-	    time(&rawtime1);
-	    timeinfo = localtime (&rawtime1);
-	    std::cout << std::string("Start local time and date: ") << std::string(asctime(timeinfo)) << std::endl;
 
 		// Scramble cube starting position and save moves
 		cube.scrambleCube(nmoves, twists);
@@ -1514,6 +1510,15 @@ void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 
 		// Save the scrambled cube for 3D scatterplot in matplotlib.pyplot
 		cube.create3Dcube(rubik_scrambled);
+
+		// Display the scrambled 3D cube using Python, both views
+		std::system("py ..\\rubikscube3Dscatter.py 0 0");
+		std::system("py ..\\rubikscube3Dscatter.py 0 1");
+
+		// start time
+	    time(&rawtime1);
+	    timeinfo = localtime (&rawtime1);
+	    std::cout << std::string("Start local time and date: ") << std::string(asctime(timeinfo)) << std::endl;
 
 		// Perform IDA()
 		cube.performIDA();
@@ -1534,6 +1539,10 @@ void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 	    std::cout << std::string("Finish local time and date: ") << std::string(asctime(timeinfo)) << std::endl;
 	    double seconds = std::difftime(rawtime2,rawtime1);
 	    std::cout << "Elapsed time: " << seconds << " seconds\n";
+
+		// Display the solved 3D cube using Python, both views
+		std::system("py ..\\rubikscube3Dscatter.py 1 0");
+		std::system("py ..\\rubikscube3Dscatter.py 1 1");
 	}
 }
 
@@ -1544,6 +1553,14 @@ int main(int argc, char *argv[]) {
 	const int max_moves = 10;
 	int nmoves = 1;
 	std::ostringstream result;
+
+	std::cout << "Checking if system processor is available\n";
+	 if (std::system(NULL)) {
+		 std::cout << "system processor is available to call Python scatterplot\n";
+	 } else {
+		 std::cout << "system processor is not available to call Python scatterplot\n";
+	 }
+
 
 	// use command line arguments to make the moves
 	if (argc > 1) {
