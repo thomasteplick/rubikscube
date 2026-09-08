@@ -1,7 +1,4 @@
 <h3>Rubik's Cube Solution Using Iterative Deepening Depth First Search (IDDFS)</h3>
-<h3> 
-Rubik's Cube Solution Using Iterative Deepening Depth First Search (IDDFS)
-</h3>
 <p>
 This program is written in C++17 and uses the Eclipse C++ IDE 2026-06 with GCC compiler and MINGW linker. 
 The solution in Rubik's cube is to have all the cube faces the same color.  The colors are White (Up face),
