@@ -56,6 +56,6 @@ In order to see the 3D scatterplots, Python, Matplotlib, and NumPy need to be in
 <img width="634" height="549" alt="image" src="https://github.com/user-attachments/assets/70a54049-cbab-4af2-8c69-6aff7e40d2a8" />
 <img width="637" height="549" alt="image" src="https://github.com/user-attachments/assets/34f2bbb0-f0a8-4689-a094-e9ac53088ee8" />
 <h4>8 moves, random moves,  seconds</h4>
-<img width="633" height="547" alt="image" src="https://github.com/user-attachments/assets/e2effd2d-b35a-45cd-9e53-1ea8c14a0f62" />
-<img width="634" height="552" alt="image" src="https://github.com/user-attachments/assets/41d50c51-5dd3-48e9-8c06-29edda8fd66a" />
+<img width="633" height="548" alt="image" src="https://github.com/user-attachments/assets/bf7642c8-61c9-47f1-89e1-0a12e0d46a81" />
+<img width="635" height="547" alt="image" src="https://github.com/user-attachments/assets/2c1afcd9-719f-418d-98c0-e8913da1c926" />
 
