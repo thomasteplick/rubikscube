@@ -30,9 +30,9 @@ The algorithm will find the shortest manhattan distance; that is, the fewest num
 the solution, which is all the faces having the same color.  The algorithm uses a bounded depth first
 search (bounded DFS).  First DFS is run with depth one.  If the solution is not found, then DFS is run
 with depth two.  This continues with DFS being run at increasingly greater depths. On my laptop, an
-eight unique move sequence could take about three hours.  The solution time increases by 18 for every
-additional move.  So you can expect solution times of 3*18 hours for a nine-move unique sequence and 
-3*18*18 for a ten-move unique sequence.  By a unique sequence, I mean that there are no moves that reverse
+eight unique move sequence could take about three to four hours.  The solution time increases by 18 for every
+additional move.  So you can expect solution times of 3*18 to 4*18 hours for a nine-move unique sequence and 
+3*18*18 to 4*18*18 for a ten-move unique sequence.  By a unique sequence, I mean that there are no moves that reverse
 the previous ones or repetitive moves that wind up at the same place such as R R' or L2 L2.  Said another 
 way, there is only one solution that is the same number of moves as the scrambling sequence.
 </p>
@@ -55,7 +55,10 @@ In order to see the 3D scatterplots, Python, Matplotlib, and NumPy need to be in
 <img width="941" height="678" alt="image" src="https://github.com/user-attachments/assets/67ed11a0-83d2-4631-bd16-d680bb7bb752" />
 <img width="634" height="549" alt="image" src="https://github.com/user-attachments/assets/70a54049-cbab-4af2-8c69-6aff7e40d2a8" />
 <img width="637" height="549" alt="image" src="https://github.com/user-attachments/assets/34f2bbb0-f0a8-4689-a094-e9ac53088ee8" />
-<h4>8 moves, random moves,  seconds</h4>
+<h4>8 moves, random moves, 13616 seconds</h4>
 <img width="633" height="548" alt="image" src="https://github.com/user-attachments/assets/bf7642c8-61c9-47f1-89e1-0a12e0d46a81" />
 <img width="635" height="547" alt="image" src="https://github.com/user-attachments/assets/2c1afcd9-719f-418d-98c0-e8913da1c926" />
+<img width="1057" height="765" alt="image" src="https://github.com/user-attachments/assets/313e9bf6-fdb6-46fe-b4e7-1860deeaf818" />
+<img width="635" height="549" alt="image" src="https://github.com/user-attachments/assets/2c4b7871-cd2a-4d59-ad0b-d45f3a999d87" />
+<img width="637" height="549" alt="image" src="https://github.com/user-attachments/assets/e2f5d624-0b64-45c8-817d-83849d8d2299" />
 
