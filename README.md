@@ -33,7 +33,8 @@ with depth two.  This continues with DFS being run at increasingly greater depth
 eight unique move sequence could take about three hours.  The solution time increases by 18 for every
 additional move.  So you can expect solution times of 3*18 hours for a nine-move unique sequence and 
 3*18*18 for a ten-move unique sequence.  By a unique sequence, I mean that there are no moves that reverse
-the previous ones or repetitive moves that wind up at the same place such as R R' or L2 L2.
+the previous ones or repetitive moves that wind up at the same place such as R R' or L2 L2.  Said another 
+way, there is only one solution that is the same number of moves as the scrambling sequence.
 </p>
 
 <p>
@@ -41,9 +42,11 @@ The user can enter the moves on the command line or allow the program to randoml
 you want to specify the moves then enter the twists after the program name with a space separating the moves.
 The scrambled cube faces are displayed along with the move sequence.  As the IDDFS proceeds, the bound is displayed
 for the current DFS.  When the solution is found, the solution moves are displayed along with the cube faces for 
-the solution; the faces should all have the same color.  A Python script can display a 3D scatterplot of the scrambled
-and solved Rubik's cube.  You can select the F-R-U or B-L-D faces to be displayed.  The input arguments are [0,1] [0,1]:
-[(scrambled|solved) (F-R-U | B-L-D)]
+the solution; the faces should all have the same color.  A Python script will display a 3D scatterplot of the scrambled
+and solved Rubik's cube.  Two views of each 3D cube are displayed.  You need to close each plot in order to continue the IDDFS.
+It takes a minute or so to render each 3D scatterplot.  When the solution is found and after the elapsed time is shown, the 
+3D scatterplots of the solution are displayed.  The first plot window has to be closed in order for the second one to be shown.
+In order to see the 3D scatterplots, Python, Matplotlib, and NumPy need to be installed.
 </p>
 
 <h4>7 moves, specify moves from command line, 1053 seconds</h4>
