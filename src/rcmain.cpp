@@ -1511,6 +1511,7 @@ void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 		// Save the scrambled cube for 3D scatterplot in matplotlib.pyplot
 		cube.create3Dcube(rubik_scrambled);
 
+		std::cout << "Creating 3D scatterplots for scrambled cube.  Close plotting window to proceed.\n";
 		// Display the scrambled 3D cube using Python, both views
 		std::system("py ..\\rubikscube3Dscatter.py 0 0");
 		std::system("py ..\\rubikscube3Dscatter.py 0 1");
@@ -1540,6 +1541,7 @@ void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 	    double seconds = std::difftime(rawtime2,rawtime1);
 	    std::cout << "Elapsed time: " << seconds << " seconds\n";
 
+		std::cout << "Creating 3D scatterplots for solved cube.  Close plotting window to proceed.\n";
 		// Display the solved 3D cube using Python, both views
 		std::system("py ..\\rubikscube3Dscatter.py 1 0");
 		std::system("py ..\\rubikscube3Dscatter.py 1 1");
