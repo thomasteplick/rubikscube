@@ -61,4 +61,11 @@ In order to see the 3D scatterplots, Python, Matplotlib, and NumPy need to be in
 <img width="1057" height="765" alt="image" src="https://github.com/user-attachments/assets/313e9bf6-fdb6-46fe-b4e7-1860deeaf818" />
 <img width="635" height="549" alt="image" src="https://github.com/user-attachments/assets/2c4b7871-cd2a-4d59-ad0b-d45f3a999d87" />
 <img width="637" height="549" alt="image" src="https://github.com/user-attachments/assets/e2f5d624-0b64-45c8-817d-83849d8d2299" />
+<h4>8 moves, specified from command line, 29828 seconds</h4>
+<img width="637" height="549" alt="image" src="https://github.com/user-attachments/assets/ffc690de-b0e2-4128-89f6-c0abed8798a8" />
+<img width="634" height="546" alt="image" src="https://github.com/user-attachments/assets/9230240c-8f2e-416e-99e2-e9fd52eff32b" />
+<img width="998" height="766" alt="image" src="https://github.com/user-attachments/assets/8fd7abf5-5265-4526-9330-9fae116f7f29" />
+<img width="637" height="551" alt="image" src="https://github.com/user-attachments/assets/5014ad89-5f35-42d9-ab86-d1e69877d638" />
+<img width="639" height="549" alt="image" src="https://github.com/user-attachments/assets/6de2fcda-0729-4227-b6d7-08bbb965884f" />
+
 
