@@ -3,13 +3,15 @@
 // Author      : Tom Teplick
 // Version     :
 // Copyright   : 
-// Description : Solve 3x3 Rubik's Cube using IDDFS, Richard Korf algorithm, display cube
+// Description : Solve 3x3 Rubik's Cube using IDA and IDA* , Richard Korf algorithm, display cube
 //============================================================================
 
 /*
  * Use cases:
+ * Create pattern databases for  1@8 corners and 2@6 edges
  * Scramble cube starting position and display 6 faces for each twist
  * Perform Iterative Deepening Depth First Search (IDDFS)
+ * Perform IDA* using pattern databases
  * Perform K trials for 1 to N twists, save solution times and number of twists in table
  * Map Cube state to faces (facelet colors) and display unfolded cube (the faces)
  * Map Cube state via faces to 3D scatterplot in matplotlib
@@ -20,10 +22,13 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <iterator>
 #include "rcmain.h"
 #include <vector>
+#include <exception>
 #include <unordered_map>
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
@@ -31,10 +36,27 @@
 #include <wincon.h>
 
 // constructor
-Cube::Cube(int nt, int mt)
+Cube::Cube(int nt, int mt) :
+	cornerDB{new uint8_t[CORNER_DB]},
+	edge1DB{new uint8_t[EDGE_DB]},
+	edge2DB{new uint8_t[EDGE_DB]},
+	toDBidx(DIM*DIM*DIM, 0)
 {
 	ntrials = nt;
 	maxTwists = mt;
+
+	// translate cube index (0,26) to corner and edge database indices
+	// corner cube indices are: 0,2,6,8,18,20,24,26 -> (0-7)
+	// edge1 cube indices are: 1,3,5,7,9,11, -> (0-5)
+	// edge2 cube indexes are: 15,17,19,21,23,25 -> (6-11)
+	toDBidx[0]=0; toDBidx[2]=1; toDBidx[6]=2; toDBidx[8]=3; toDBidx[18]=4; toDBidx[20]=5; toDBidx[24]=6; toDBidx[26]=7;
+	toDBidx[1]=0; toDBidx[3]=1; toDBidx[5]=2; toDBidx[7]=3; toDBidx[9]=4; toDBidx[11]=5;
+	toDBidx[15]=6; toDBidx[17]=7; toDBidx[19]=8; toDBidx[21]=9; toDBidx[23]=10; toDBidx[25]=11;
+
+	if (!cornerDB || !edge1DB || !edge2DB) {
+		std::cout << "Database memory failure\n";
+		throw std::bad_alloc();
+	}
 }
 
 // Up face rotate CW 90 deg, z axis, plane 2
@@ -461,7 +483,6 @@ void Cube::scrambleCube(int nmoves, const std::vector<std::string> &twists)
 			// random selection of move
 			mv = revRotate[std::rand() % MOVES];
 		}
-		//rotate mv = rotate::B2;
 		doMove(mv);
 		// push to move queue for later display
 		mvQueue.push(mv);
@@ -596,10 +617,6 @@ void Cube::displayCubeFaces()
 void Cube::tabulateTestResults()
 {
 	// show trial move count and time
-
-	// convert rotations to string
-	std::vector<std::string> rot2char{
-		"U", "U'", "U2", "D", "D'", "D2", "L", "L'", "L2", "R", "R'", "R2", "F", "F'", "F2", "B", "B'", "B2"};
 
 	// buffer to hold the moves in reverse order
 	std::vector<rotate> buf;
@@ -1403,6 +1420,265 @@ void Cube::embedFB(uint8_t cube3D[DIM3D][DIM3D][DIM3D])
 	}
 }
 
+inline int Cube::cornerDBindx()
+{
+	// decode the cube state for corner cubies
+	// calculate corner index by reading cube corners, map to (0,7), and weight them by powers of 8
+	return  pwr8[0]*toDBidx[cube[0][0][0]] + pwr8[1]*toDBidx[cube[0][0][2]] + pwr8[2]*toDBidx[cube[0][2][0]] +
+			pwr8[3]*toDBidx[cube[0][2][2]] + pwr8[4]*toDBidx[cube[2][0][0]] + pwr8[5]*toDBidx[cube[2][0][2]] +
+			pwr8[6]*toDBidx[cube[2][2][0]] + pwr8[7]*toDBidx[cube[2][2][2]];
+}
+
+inline int Cube::edge1DBindx()
+{
+	// decode the cube state for edge 1 cubies
+    // calculate edge cubies 1-6 index by reading cube edges, map to (0,5), and weight them by powers of 12
+	return pwr12[0]*toDBidx[cube[0][0][1]] + pwr12[1]*toDBidx[cube[0][1][0]] + pwr12[2]*toDBidx[cube[0][1][2]] +
+			pwr12[3]*toDBidx[cube[0][2][1]] + pwr12[4]*toDBidx[cube[1][0][0]] + pwr12[5]*toDBidx[cube[1][0][2]];
+}
+inline int Cube::edge2DBindx()
+{
+	// decode the cube state for edge 2 cubies
+	// calculate edge cubies 7-12 index by reading cube edges, map to (0,5), and weight them by powers of 12
+	return pwr12[0]*toDBidx[cube[1][2][0]] + pwr12[1]*toDBidx[cube[1][2][2]] + pwr12[2]*toDBidx[cube[2][0][1]] +
+			pwr12[3]*toDBidx[cube[2][1][0]] + pwr12[4]*toDBidx[cube[2][1][2]] + pwr12[5]*toDBidx[cube[2][2][1]];
+}
+
+
+// estimates moves to make from current cube state to solution state using the databases
+int Cube::heuristicDB()
+{
+	// decode the cube state for corner cubies
+	// calculate corner index by reading cube corners, map to (0,7), and weight them by powers of 8
+	int index = cornerDBindx();
+	int cornerMoves = cornerDB[index];
+
+	// decode the cube state for edge 1 and edge 2 cubies
+    // calculate edge cubies 1-6 index by reading cube edges, map to (0,5), and weight them by powers of 12
+	index = edge1DBindx();
+	int edge1Moves = edge1DB[index];
+
+	// calculate edge cubies 7-12 index by reading cube edges, map to (0,5), and weight them by powers of 12
+	index = edge2DBindx();
+	int edge2Moves = edge2DB[index];
+
+	// choose the maximum of the three database move estimates and return it
+	return std::max(std::max(cornerMoves, edge1Moves), edge2Moves);
+}
+
+// recurse the cube state tree with DFS using pruning on corners and edges
+bool Cube::boundDFSprune(int depth, int bound)
+{
+	int estMoves = heuristicDB() + depth;
+	if (estMoves > bound) {
+	    return false;
+	}
+
+	if (isSolved()) {
+	    return true;
+	}
+	// Loop through all possible moves
+	for (rotate rot : {rotate::U, rotate::U_, rotate::U2, rotate::D, rotate::D_, rotate::D2,
+		rotate::L, rotate::L_, rotate::L2, rotate::R, rotate::R_, rotate::R2,
+		rotate::F, rotate::F_, rotate::F2, rotate::B, rotate::B_, rotate::B2}) {
+		// do a face twist of the cube state
+		doMove(rot);
+		// keep track of our moves
+		rotStack.push(rot);
+		if (boundDFS(depth + 1, bound)) {
+			  return true;
+		}
+		// remove the last move since it didn't work
+	    rotStack.pop();
+	    // undo the move, do the reverse twist to the cube state
+	    doMove(revRotate[static_cast<int>(rot)]);
+	}
+	return false;
+}
+
+// run IDA*, IDDFS with pruning, Richard Korf algorithm
+void Cube::performIDAstar()
+{
+	int depth = 0;
+	int bound = 1;
+	std::cout << "search bound = " << bound << std::endl;
+	while (!boundDFSprune(depth, bound)) {
+		++bound;
+		std::cout << "search bound = " << bound << std::endl;
+	}
+}
+
+// recurse DFS for pattern DB construction
+void Cube::DBboundDFS(int depth, int bound)
+{
+
+	if (depth > bound) {
+	    return;
+	}
+
+	// encode the cube state for corner cubies
+	// calculate corner index by reading cube corners, map to (0,7), and weight them by powers of 8
+	int index = cornerDBindx();
+
+	// add to database if not found yet
+	if (cornerDB[index] == NOT_FOUND) {
+		cornerDB[index] = depth;
+	}
+
+	// encode the cube state for edge1 and edge2 cubies
+    // calculate edge cubies 1-6 index by reading cube edges, map to (0,5), and weight them by powers of 12
+	index = edge1DBindx();
+
+	// add to database if not found yet
+	if (edge1DB[index] == NOT_FOUND) {
+		edge1DB[index] = depth;
+	}
+
+	// calculate edge cubies 7-12 index by reading cube edges, map to (0,5), and weight them by powers of 12
+	index = edge2DBindx();
+
+	// add to database if not found yet
+	if (edge2DB[index] == NOT_FOUND) {
+		edge2DB[index] = depth;
+	}
+
+	// Loop through all possible moves
+	for (rotate rot : {rotate::U, rotate::U_, rotate::U2, rotate::D, rotate::D_, rotate::D2,
+		rotate::L, rotate::L_, rotate::L2, rotate::R, rotate::R_, rotate::R2,
+		rotate::F, rotate::F_, rotate::F2, rotate::B, rotate::B_, rotate::B2}) {
+		// do a face twist of the cube state
+		doMove(rot);
+		DBboundDFS(depth + 1, bound);
+	    // undo the move, do the reverse twist to the cube state
+	    doMove(revRotate[static_cast<int>(rot)]);
+	}
+	return;
+}
+
+// Read/Create pattern databases, 1@8corners, 2@6edges
+void Cube::createPatternDB()
+{
+    // Read/Create the corner and edge databases if necessary
+	std::ifstream fcornerDBin;
+	std::ifstream fedge1DBin;
+	std::ifstream fedge2DBin;
+	fcornerDBin.open(cornerDBfile.c_str(), std::fstream::in);
+	fedge1DBin.open(edge1DBfile.c_str(), std::fstream::in);
+	fedge2DBin.open(edge2DBfile.c_str(), std::fstream::in);
+	if (!fcornerDBin.is_open() || !fedge1DBin.is_open() || !fedge2DBin.is_open()) {
+
+		fcornerDBin.close();
+		fedge1DBin.close();
+		fedge2DBin.close();
+
+		// Create the corner database
+		std::ofstream fcornerDBout;
+		fcornerDBout.open(cornerDBfile.c_str(), std::fstream::out);
+		if (!fcornerDBout.is_open()) {
+			std::cout << "Cannot create file " << cornerDBfile << std::endl;
+			throw std::runtime_error("cannot create file " + cornerDBfile);
+		}
+
+		// Create the edge 1-6 database
+		std::ofstream fedge1DBout;
+		fedge1DBout.open(edge1DBfile.c_str(), std::fstream::out);
+		if (!fedge1DBout.is_open()) {
+			std::cout << "Cannot create file " << edge1DBfile << std::endl;
+			throw std::runtime_error("cannot create file " + edge1DBfile);
+		}
+
+		// Create the edge 7-12 database
+		std::ofstream fedge2DBout;
+		fedge2DBout.open(edge2DBfile.c_str(), std::fstream::out);
+		if (!fedge2DBout.is_open()) {
+			std::cout << "Cannot create file " << edge2DBfile << std::endl;
+			throw std::runtime_error("cannot create file " + edge2DBfile);
+		}
+
+		// initialize the corner and edges for state to index DB conversion
+		uint8_t n = 0;
+		// initialize the cube order for the solved cube
+		for (int i = 0; i < DIM; ++i) {
+			for (int j = 0; j < DIM; ++j) {
+				for (int k = 0; k < DIM; ++k) {
+					cube[i][j][k] = uint8_t(n);
+					++n;
+				}
+			}
+		}
+
+		std::cout << "fill the database with NOT_FOUND\n";
+
+		// initialize the corner and edge databases
+		std::fill(cornerDB.get(), cornerDB.get()+CORNER_DB, NOT_FOUND);
+		std::fill(edge1DB.get(), edge1DB.get()+EDGE_DB, NOT_FOUND);
+		std::fill(edge2DB.get(), edge2DB.get()+EDGE_DB, NOT_FOUND);
+
+		// DFS depth needed to fill in the tables
+		int maxBound = std::ceil(std::log(double(CORNER_DB))/std::log(double(MOVES)));
+		std::cout << "Create the databases using IDDFS, maxBound = " << maxBound << std::endl;
+		// create the databases using IDDFS
+		int depth = 0;
+		for (int bound = 1; bound <= maxBound; ++bound) {
+			std::cout << "bound = " << bound << std::endl;
+			DBboundDFS(depth, bound);
+		}
+
+		// Save the databases
+		std::cout << "save the databases\n";
+		std::ostream_iterator<uint8_t> cornerit(fcornerDBout, " ");
+		std::copy(cornerDB.get(), cornerDB.get()+CORNER_DB, cornerit);
+
+		std::ostream_iterator<uint8_t> edge1it(fedge1DBout, " ");
+		std::copy(edge1DB.get(), edge1DB.get()+EDGE_DB, edge1it);
+
+		std::ostream_iterator<uint8_t> edge2it(fedge2DBout, " ");
+		std::copy(edge2DB.get(), edge2DB.get()+EDGE_DB, edge2it);
+
+		fcornerDBout.close();
+		fedge1DBout.close();
+		fedge2DBout.close();
+
+		// database statistics
+		int nfs = std::count(cornerDB.get(), cornerDB.get()+CORNER_DB, NOT_FOUND);
+		std::cout << "corner database:  Found: " << (CORNER_DB-nfs) << ", Not Found: " << nfs << std::endl;
+
+		nfs = std::count(edge1DB.get(), edge1DB.get()+EDGE_DB, NOT_FOUND);
+		std::cout << "edge 1 database:  Found: " << (EDGE_DB-nfs) << ", Not Found: " << nfs << std::endl;
+
+		nfs = std::count(edge2DB.get(), edge2DB.get()+EDGE_DB, NOT_FOUND);
+		std::cout << "edge 2 database:  Found: " << (EDGE_DB-nfs) << ", Not Found: " << nfs << std::endl;
+
+
+	} else {
+		fcornerDBin.open(cornerDBfile.c_str(), std::fstream::in);
+		fedge1DBin.open(edge1DBfile.c_str(), std::fstream::in);
+		fedge2DBin.open(edge2DBfile.c_str(), std::fstream::in);
+
+		// read in the three pattern databases:  corners1-8, edges1-6, edges7-12
+		// end-of-stream iterator
+		std::istream_iterator<uint8_t> eos;
+		std::istream_iterator<uint8_t> cornerit(fcornerDBin);
+		int i = 0;
+		while (cornerit != eos) {
+			cornerDB[i++] = *cornerit++;
+		}
+		std::istream_iterator<uint8_t> edge1it(fedge1DBin);
+		i = 0;
+		while (edge1it != eos) {
+			edge1DB[i++] = *edge1it++;
+		}
+		std::istream_iterator<uint8_t> edge2it(fedge2DBin);
+		i = 0;
+		while (edge2it != eos) {
+			edge2DB[i++] = *edge2it++;
+		}
+		fcornerDBin.close();
+		fedge1DBin.close();
+		fedge2DBin.close();
+	}
+}
+
 // Convert facelets[][][] to a 3D cube for a matplotlib.pyplot scatterplot and save .txt
 void Cube::create3Dcube(const std::string &file)
 {
@@ -1444,7 +1720,6 @@ void Cube::create3Dcube(const std::string &file)
 		}
 	}
 	fcube3D.close();
-
 }
 
 // recurse the cube state tree with DFS
@@ -1548,12 +1823,79 @@ void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 	}
 }
 
+void handleIDAstar(int trials, int nmoves, const std::vector<std::string> &twists)
+{
+
+	// create a cube with the trials and moves
+	Cube cube(trials, nmoves);
+
+	// read pattern databases, create them if necessary
+	cube.createPatternDB();
+
+    // show start, end, and elapsed times
+    time_t rawtime1;
+    time_t rawtime2;
+    struct tm *timeinfo;
+
+	// loop over the trials
+	for (int tri = 0; tri < trials; ++tri) {
+
+		// Scramble cube starting position and save moves
+		cube.scrambleCube(nmoves, twists);
+
+		// Create the cube faces using saved moves
+		// and display them, 6 faces 3x3 in one row
+		cube.createCubeFaces(true);
+		cube.displayCubeFaces();
+
+		// Save the scrambled cube for 3D scatterplot in matplotlib.pyplot
+		cube.create3Dcube(rubik_scrambled);
+
+		std::cout << "Creating 3D scatterplots for scrambled cube.  Close plotting window to proceed.\n";
+		// Display the scrambled 3D cube using Python, both views
+		std::system("py ..\\rubikscube3Dscatter.py 0 0");
+		std::system("py ..\\rubikscube3Dscatter.py 0 1");
+
+		// start time
+	    time(&rawtime1);
+	    timeinfo = localtime (&rawtime1);
+	    std::cout << std::string("Start local time and date: ") << std::string(asctime(timeinfo)) << std::endl;
+
+		// Perform IDA* (IDDFS with pruning)
+		cube.performIDAstar();
+
+		// tabulate the results:  solution time and 1/4 turn metric (QTM)
+		cube.tabulateTestResults();
+
+		// Create and Display the faces of the solution
+		cube.createCubeFaces(false);
+		cube.displayCubeFaces();
+
+		// Save the solution cube for 3D scatterplot in matplotlib.pyplot
+		cube.create3Dcube(rubik_solved);
+
+		// end time, elapsed time
+	    time(&rawtime2);
+	    timeinfo = localtime (&rawtime2);
+	    std::cout << std::string("Finish local time and date: ") << std::string(asctime(timeinfo)) << std::endl;
+	    double seconds = std::difftime(rawtime2,rawtime1);
+	    std::cout << "Elapsed time: " << seconds << " seconds\n";
+
+		std::cout << "Creating 3D scatterplots for solved cube.  Close plotting window to proceed.\n";
+		// Display the solved 3D cube using Python, both views
+		std::system("py ..\\rubikscube3Dscatter.py 1 0");
+		std::system("py ..\\rubikscube3Dscatter.py 1 1");
+	}
+
+}
+
 int main(int argc, char *argv[]) {
 	// seed the random number generator so it changes over time
 	std::srand(time(NULL));
 	const int min_moves = 1;
 	const int max_moves = 10;
 	int nmoves = 1;
+	std::string prune;
 	std::ostringstream result;
 
 	std::cout << "Checking if system processor is available\n";
@@ -1564,7 +1906,7 @@ int main(int argc, char *argv[]) {
 	 }
 
 
-	// use command line arguments to make the moves
+	// use command line arguments to make the moves and choose IDA or IDA*
 	if (argc > 1) {
 
 		// valid moves
@@ -1573,10 +1915,6 @@ int main(int argc, char *argv[]) {
 		std::vector<std::string> moves;
 
 		nmoves = argc-1;
-		if ((nmoves < min_moves) || (nmoves > max_moves)) {
-			result << "moves not in [" << min_moves << "," << max_moves << "], ";
-		}
-
 		for (int i = 1; i < argc; ++i) {
 			// verify move
 			auto twistit = std::find(twists.begin(), twists.end(), argv[i]);
@@ -1586,11 +1924,24 @@ int main(int argc, char *argv[]) {
 				moves.push_back(argv[i]);
 			}
 		}
+		// determine if using prune tables
+		std::cout << "Use pruning tables (y/n): ";
+		std::cin >> prune;
+		if ((nmoves < min_moves) || (nmoves > max_moves)) {
+			result << "moves not in [" << min_moves << "," << max_moves << "], ";
+		}
+		if ((prune != "y") && (prune != "n")) {
+			result << "prune is not 'y' or 'n'" << "\n";
+		}
 		if (result.str().size() > 0) {
 			std::cout << result.str() << std::endl;
 			return 1;
 		}
-		handleIDA(1, nmoves, moves);
+		if (prune == "y") {
+			handleIDAstar(1, nmoves, moves);
+		} else {
+			handleIDA(1, nmoves, moves);
+		}
 
 	} else {
 		const int min_trials = 1;
@@ -1602,18 +1953,28 @@ int main(int argc, char *argv[]) {
 		// Enter the number of trials
 		std::cout << "Enter the number of trials using the given number of moves (1-10): ";
 		std::cin >> trials;
+		// Enter IDA or IDA*
+		std::cout << "Use pruning tables (y/n): ";
+		std::cin >> prune;
 		if ((nmoves < min_moves) || (nmoves > max_moves)) {
 			result << "moves not in [" << min_moves << "," << max_moves << "], ";
 		}
 		if ((trials < min_trials) || (trials > max_trials)) {
 			result << "trials not in [" << min_trials << "," << max_trials << "], ";
 		}
+		if ((prune != "y") && (prune != "n")) {
+			result << "prune is not 'y' or 'n'" << "\n";
+		}
 		if (result.str().size() > 0) {
 			std::cout << result.str() << std::endl;
 			return 1;
 		}
 
-		handleIDA(trials, nmoves);
+		if (prune == "y") {
+			handleIDAstar(trials, nmoves);
+		} else {
+			handleIDA(trials, nmoves);
+		}
 
 	}
 	return 0;
