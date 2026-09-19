@@ -54,7 +54,8 @@ each with six cubies.  The corner database has the eight cubies.  The cube state
 the databases.  The databases contain the distances or moves from the solution state.  When the IDDFS is run for a Rubik's run, the databases
 serve as a heuristic to determine how many more moves it will take to get to the solution state.  The number of moves already
 taken is added to the heuristic value.  If the sum is greater than the current bound for the Iterative Deepening, the current search is abandoned.  
-In this way, searches that cannot possibly lead to a solution state are abandoned early.  The databases are constructed once.
+In this way, searches that cannot possibly lead to a solution state are abandoned early.  The databases are constructed once; thereafter they are 
+read into memory.  The corner database takes 8^8 bytes and each edge database takes 12^6 bytes in memory.
 The method used is IDDFS from the solution state and the maximum depth is six.  So each database has the distance from the solution
 state to the moved state and is indexed according to the moved state.  When the IDDFS is run for a Rubik's cube run, each moved state
 is encoded into an index and that index is used to look up the distance in each database.  The maximum of the three databases distances is used
