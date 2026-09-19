@@ -11,6 +11,7 @@
 #include <stack>
 #include <vector>
 #include <queue>
+#include <memory>
 
 /*
  * Home start position of the cube, Face=Color
@@ -26,11 +27,22 @@ const int DIM3D = 48;
 
 const std::string rubik_scrambled{"..\\data\\rubik_scrambled.txt"};
 const std::string rubik_solved{"..\\data\\rubik_solved.txt"};
+const std::string cornerDBfile{"..\\data\\cornerDB.txt"};
+const std::string edge1DBfile{"..\\data\\edge1DB.txt"};
+const std::string edge2DBfile{"..\\data\\edge2DB.txt"};
 
 // number of faces in the cube
 const int NFACES = 6;
 
 const uint8_t black = 7;
+
+// 8^8 = 2^24 = 2^12 * 2^12 is the corner database size for pruning
+const int CORNER_DB = 4096*4096;
+// 12^6 = edges database size for pruning
+const int EDGE_DB = 2985984;
+
+// pattern database entry for number of moves
+const int NOT_FOUND = 20;
 
 enum class color : uint8_t {WHITE, YELLOW, RED, ORANGE, GREEN, BLUE};
 // corner has 3 facelets, edge has 2 facelets, center has 1 facelet
@@ -41,13 +53,21 @@ enum class face : uint8_t {L, B, D, F, R, U};
 // Rotations of the faces, or twists (90 deg, 180 deg): CW, CCW, CWCW
 enum class rotate : uint8_t {U, U_, U2, D, D_, D2, L, L_, L2, R, R_, R2, F, F_, F2, B, B_, B2};
 
-// 3x3x3 cubies, 8-bit uint element = [0, 26], use for IDA
+// 3x3x3 cubies, 8-bit uint element = [0, 26], use for IDA and IDA*
 class Cube {
 private:
 	uint8_t cube[DIM][DIM][DIM];
 	uint8_t facelets[NFACES][DIM][DIM];
+	std::unique_ptr<uint8_t[]> cornerDB;
+	std::unique_ptr<uint8_t[]> edge1DB;
+	std::unique_ptr<uint8_t[]> edge2DB;
 	int ntrials;
 	int maxTwists;
+	// weighting powers of 8 for corner cubies
+	std::vector<int> pwr8{1,8,64,512,4096,32768,262144,2097152};
+	// weighting powers of 12 for edge cubies
+	std::vector<int> pwr12{1,12,144,1728,20736,248832};
+	std::vector<uint8_t> toDBidx;
 
 	// moves done while performing DFS
 	std::stack<rotate> rotStack;
@@ -56,7 +76,13 @@ private:
 
 	bool isSolved();
 	bool boundDFS(int depth, int bound);
+	bool boundDFSprune(int depth, int bound);
+	void DBboundDFS(int depth, int bound);
+	int heuristicDB();
 	inline void doMove(rotate move);
+	inline int cornerDBindx();
+	inline int edge1DBindx();
+	inline int edge2DBindx();
 	void embedUD(uint8_t cube3D[DIM3D][DIM3D][DIM3D]);
 	void embedLR(uint8_t cube3D[DIM3D][DIM3D][DIM3D]);
 	void embedFB(uint8_t cube3D[DIM3D][DIM3D][DIM3D]);
@@ -132,11 +158,14 @@ public:
 	void scrambleCube(int nmoves, const std::vector<std::string> &twists);
 	void createCubeFaces(bool init);
 	void performIDA();
+	void performIDAstar();
 	void tabulateTestResults();
 	void create3Dcube(const std::string &file);
+	void createPatternDB();
 
 };
 
 void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists = std::vector<std::string>());
+void handleIDAstar(int trials, int nmoves, const std::vector<std::string> &twists = std::vector<std::string>());
 
 #endif /* RCMAIN_H_ */
