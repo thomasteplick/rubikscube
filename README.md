@@ -48,6 +48,22 @@ It takes a minute or so to render each 3D scatterplot.  When the solution is fou
 3D scatterplots of the solution are displayed.  The first plot window has to be closed in order for the second one to be shown.
 In order to see the 3D scatterplots, Python, Matplotlib, and NumPy need to be installed.
 </p>
+</p>
+Pruning tables (pattern databases) are constructed for the corner cubies and edge cubies.  There are two edge databases, 
+each with six cubies.  The corner database has the eight cubies.  The cube state is encoded into an index for each of 
+the databases.  The databases contain the distances or moves from the solution state.  When the IDDFS is run for a Rubik's run, the databases
+serve as a heuristic to determine how many more moves it will take to get to the solution state.  The number of moves already
+taken is added to the heuristic value.  If the sum is greater than the current bound for the Iterative Deepening, the current search is abandoned.  
+In this way, searches that cannot possibly lead to a solution state are abandoned early.  The databases are constructed once.
+The method used is IDDFS from the solution state and the maximum depth is six.  So each database has the distance from the solution
+state to the moved state and is indexed according to the moved state.  When the IDDFS is run for a Rubik's cube run, each moved state
+is encoded into an index and that index is used to look up the distance in each database.  The maximum of the three databases distances is used
+as the heuristic to decide whether to continue the current DFS along with the number of moves already taken.  Unfortunately, the calculation 
+needed to encode the cube state into each database index is not trivial.  This has to be done for each move taken.  I have found that there is
+no advantage in using pruning tables, at least by the way I am encoding the cube state to the database indices.  It is worth noting that due
+to the sizes of the prune table databases, they must be placed on the heap and not on the stack, so dynamic memory allocation is used.  The program
+will not run if the databases are placed on the stack.
+<p>
 
 <h4>7 moves, specify moves from command line, 1053 seconds</h4>
 <img width="635" height="550" alt="image" src="https://github.com/user-attachments/assets/332878d1-2d20-46cc-8db0-30716f855789" />
