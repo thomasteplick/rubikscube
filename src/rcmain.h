@@ -12,6 +12,8 @@
 #include <vector>
 #include <queue>
 #include <memory>
+#include <atomic>
+#include <future>
 
 /*
  * Home start position of the cube, Face=Color
@@ -30,6 +32,7 @@ const std::string rubik_solved{"..\\data\\rubik_solved.txt"};
 const std::string cornerDBfile{"..\\data\\cornerDB.txt"};
 const std::string edge1DBfile{"..\\data\\edge1DB.txt"};
 const std::string edge2DBfile{"..\\data\\edge2DB.txt"};
+const std::string cubestateconf{"..\\data\\cubestate.conf"};
 
 // number of faces in the cube
 const int NFACES = 6;
@@ -44,6 +47,9 @@ const int EDGE_DB = 2985984;
 // pattern database entry for number of moves
 const int NOT_FOUND = 20;
 
+// number of threads
+const int nthreads = NFACES;
+
 enum class color : uint8_t {WHITE, YELLOW, RED, ORANGE, GREEN, BLUE};
 // corner has 3 facelets, edge has 2 facelets, center has 1 facelet
 enum class position : uint8_t{CORNER, EDGE, CENTER};
@@ -56,26 +62,32 @@ enum class rotate : uint8_t {U, U_, U2, D, D_, D2, L, L_, L2, R, R_, R2, F, F_, 
 // 3x3x3 cubies, 8-bit uint element = [0, 26], use for IDA and IDA*
 class Cube {
 private:
+	// six cubes, one for each thread
 	uint8_t cube[DIM][DIM][DIM];
 	uint8_t facelets[NFACES][DIM][DIM];
 	std::unique_ptr<uint8_t[]> cornerDB;
 	std::unique_ptr<uint8_t[]> edge1DB;
 	std::unique_ptr<uint8_t[]> edge2DB;
+	std::vector<uint8_t> toDBidx;
 	int ntrials;
 	int maxTwists;
+	enum::rotate rotatePartition;
 	// weighting powers of 8 for corner cubies
 	std::vector<int> pwr8{1,8,64,512,4096,32768,262144,2097152};
 	// weighting powers of 12 for edge cubies
 	std::vector<int> pwr12{1,12,144,1728,20736,248832};
-	std::vector<uint8_t> toDBidx;
+
+	// atomic<bool> for foundSolution that threads check to terminate
+	static std::atomic<bool> solutionFound;
 
 	// moves done while performing DFS
+	// six stacks, one for each thread
 	std::stack<rotate> rotStack;
-	// scramble moves and save for display
+	// scramble/solution moves and save for display
 	std::queue<rotate> mvQueue;
 
 	bool isSolved();
-	bool boundDFS(int depth, int bound);
+	bool boundDFS(int depth, int bound, std::promise<int> &prom);
 	bool boundDFSprune(int depth, int bound);
 	void DBboundDFS(int depth, int bound);
 	int heuristicDB();
@@ -147,21 +159,22 @@ private:
 								  rotate::F_, rotate::F, rotate::F2, rotate::B_, rotate::B, rotate::B2};
 
 public:
-	Cube(int ntrials=1, int maxTwists=1);
-	~Cube(){}
-	Cube(const Cube &) = delete;
-	Cube & operator=(const Cube &) = delete;
-	Cube(const Cube &&) = delete;
-	Cube & operator=(const Cube &&) = delete;
+	Cube(int ntrials=1, int maxTwists=1, rotate rotatePartition=rotate::U);
+	~Cube() = default;
+	Cube(const Cube &) = default;
+	Cube & operator=(const Cube &) = default;
+	Cube(Cube &&) = default;
+	Cube & operator=(Cube &&) = default;
 
 	void displayCubeFaces();
 	void scrambleCube(int nmoves, const std::vector<std::string> &twists);
 	void createCubeFaces(bool init);
-	void performIDA();
+	void performIDA(rotate partition, std::promise<int> &prom);
 	void performIDAstar();
 	void tabulateTestResults();
 	void create3Dcube(const std::string &file);
 	void createPatternDB();
+	void readCubeConfig();
 
 };
 
