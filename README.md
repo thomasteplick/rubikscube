@@ -65,7 +65,16 @@ no advantage in using pruning tables, at least by the way I am encoding the cube
 to the sizes of the prune table databases, they must be placed on the heap and not on the stack, so dynamic memory allocation is used.  The program
 will not run if the databases are placed on the stack.
 <p>
-
+<p>
+Concurrency was incorporated by using multithreading.  Six threads were used to perform the IDDFS; each thread used the three moves for a
+face, on the first descent level only.  The remaining levels of the IDDFS used the total 18 moves.  For instance, one thread started the DFS using
+U, U', and U2 only.  The next recursion of the descent used all 18 moves of the cube.  When a thread found the solution, it would set
+a static member atomic<bool> variable true.  The other threads read this boolean every time they start a DFS.  If it is true they immediately 
+return and the thread terminates.  The solution thread also signals the parent launching thread with a future/promise synchronization
+exchange.  Future/promise was used instead of a condition variable and mutex because this is a one-off event.  The value sent to the
+launching thread in the promise::set_value was the ID of the solution-finding thread.  The launching thread was blocked with a future::get
+function call.  Once the promise was received by the launching thread, it joined with all the DFS threads that were doing the IDDFS.
+</p>
 <h4>7 moves, specify moves from command line, 1053 seconds</h4>
 <img width="635" height="550" alt="image" src="https://github.com/user-attachments/assets/332878d1-2d20-46cc-8db0-30716f855789" />
 <img width="635" height="549" alt="image" src="https://github.com/user-attachments/assets/dabc0cc6-7abe-446e-9622-7bef40c9dcec" />
