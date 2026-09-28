@@ -25,6 +25,8 @@
 #include <iterator>
 #include "rcmain.h"
 #include <vector>
+#include <thread>
+#include <map>
 #include <exception>
 #include <unordered_map>
 #include <algorithm>
@@ -35,20 +37,28 @@
 #include <Windows.h>
 #include <wincon.h>
 
+// winning thread sets this true during IDDFS and other
+// threads read it to determine when to terminate
+std::atomic<bool> Cube::solutionFound = false;
+
 // constructor
-Cube::Cube(int nt, int mt) :
+Cube::Cube(int nt, int mt, rotate rotPart) :
+#ifdef USE_PRUNE
 	cornerDB{new uint8_t[CORNER_DB]},
 	edge1DB{new uint8_t[EDGE_DB]},
 	edge2DB{new uint8_t[EDGE_DB]},
-	toDBidx(DIM*DIM*DIM, 0)
+	toDBidx(DIM*DIM*DIM, 0),
+#endif
+	ntrials{nt},
+	maxTwists{mt},
+	rotatePartition{rotPart}
 {
-	ntrials = nt;
-	maxTwists = mt;
 
 	// translate cube index (0,26) to corner and edge database indices
 	// corner cube indices are: 0,2,6,8,18,20,24,26 -> (0-7)
 	// edge1 cube indices are: 1,3,5,7,9,11, -> (0-5)
 	// edge2 cube indexes are: 15,17,19,21,23,25 -> (6-11)
+#ifdef USE_PRUNE
 	toDBidx[0]=0; toDBidx[2]=1; toDBidx[6]=2; toDBidx[8]=3; toDBidx[18]=4; toDBidx[20]=5; toDBidx[24]=6; toDBidx[26]=7;
 	toDBidx[1]=0; toDBidx[3]=1; toDBidx[5]=2; toDBidx[7]=3; toDBidx[9]=4; toDBidx[11]=5;
 	toDBidx[15]=6; toDBidx[17]=7; toDBidx[19]=8; toDBidx[21]=9; toDBidx[23]=10; toDBidx[25]=11;
@@ -57,6 +67,72 @@ Cube::Cube(int nt, int mt) :
 		std::cout << "Database memory failure\n";
 		throw std::bad_alloc();
 	}
+#endif
+}
+
+void Cube::readCubeConfig()
+{
+	// open the cube config file
+	std::ifstream fcubeconfig;
+	fcubeconfig.open(cubestateconf, std::fstream::in);
+	if (!fcubeconfig.is_open()) {
+		std::cout << "could not open file: " << cubestateconf << std::endl;
+		throw std::runtime_error("could not open file: " + cubestateconf);
+	}
+	// map cubie colors to the cube ID, corners and edges only
+	std::unordered_map<std::string, uint8_t> cubeID;
+	cubeID["GOY"]=0;cubeID["OY"]=1;cubeID["BOY"]=2;cubeID["GY"]=3;cubeID["BY"]=5;cubeID["GRY"]=6;cubeID["RY"]=7;cubeID["BRY"]=8;
+	cubeID["GO"]=9;cubeID["BO"]=11;cubeID["GR"]=15;cubeID["BR"]=17;
+	cubeID["GOW"]=18;cubeID["OW"]=19;cubeID["BOW"]=20;cubeID["GW"]=21;cubeID["BW"]=23;cubeID["GRW"]=24;cubeID["RW"]=25;cubeID["BRW"]=26;
+
+	// map char to color
+	std::unordered_map<char, color> toColor;
+	toColor['W']=color::WHITE; toColor['Y']=color::YELLOW; toColor['R']=color::RED;
+	toColor['O']=color::ORANGE; toColor['G']=color::GREEN; toColor['B']=color::BLUE;
+
+	// assign the face centers and cube center cubie to cube ID in the cube
+	cube[0][1][1]=4;cube[2][1][1]=22;
+    cube[1][0][1]=10;cube[1][1][0]=12;cube[1][1][2]=14;cube[1][2][1]=16;
+    cube[1][1][1]=13;
+
+	// read the corner cubies into the cube[][][]
+    std::string clrs;
+    fcubeconfig >> clrs; cube[0][0][0] = cubeID[clrs];
+    fcubeconfig >> clrs; cube[0][0][2] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[0][2][0] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[0][2][2] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[2][0][0] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[2][0][2] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[2][2][0] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[2][2][2] = cubeID[clrs];
+
+	// read the edge cubies into the cube[][][]
+	fcubeconfig >> clrs; cube[0][0][1] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[0][1][0] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[0][1][2] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[0][2][1] = cubeID[clrs];
+
+	fcubeconfig >> clrs; cube[1][0][0] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[1][0][2] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[1][2][0] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[1][2][2] = cubeID[clrs];
+
+	fcubeconfig >> clrs; cube[2][0][1] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[2][1][0] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[2][1][2] = cubeID[clrs];
+	fcubeconfig >> clrs; cube[2][2][1] = cubeID[clrs];
+
+	// read the color into facelets[][][]
+	char ch;
+    for (face f : {face::L, face::B, face::D, face::F, face::R, face::U}) {
+    	for (int i = 0; i < DIM; ++i) {
+    		for (int j = 0; j < DIM; ++j) {
+    			fcubeconfig >> ch;
+    			facelets[static_cast<uint8_t>(f)][i][j] = static_cast<uint8_t>(toColor[ch]);
+    		}
+    	}
+    }
+    fcubeconfig.close();
 }
 
 // Up face rotate CW 90 deg, z axis, plane 2
@@ -477,12 +553,7 @@ void Cube::scrambleCube(int nmoves, const std::vector<std::string> &twists)
 	rotate mv;
 	// loop over the number of requested twists
 	for (int i = 0; i < nmoves; ++i) {
-		if (twists.size() > 0) {
-			mv = storot[twists[i]];
-		} else {
-			// random selection of move
-			mv = revRotate[std::rand() % MOVES];
-		}
+		mv = storot[twists[i]];
 		doMove(mv);
 		// push to move queue for later display
 		mvQueue.push(mv);
@@ -561,7 +632,7 @@ void Cube::displayCubeFaces()
 	WORD wOldColorAttrs = csbiInfo.wAttributes;
 
 	// print "L B D F R U" above faces (left,back,down,front,right,up)
-	std::cout << "       L                B                D                F                R                U" << "\n";
+	std::cout << "\n" << "       L                B                D                F                R                U" << "\n";
 	// display the faces L B D F R U as 3x3 squares
 	// show the scrambled and solved cube
 	// clear the move queue
@@ -662,13 +733,19 @@ void Cube::createCubeFaces(bool init)
 			}
 		}
 		// print the scramble moves
-		std::cout << "cube scramble moves: ";
+		if (rotatePartition == rotate::U) {
+			std::cout << "cube scramble moves: ";
+		}
 	}
 
 	// Determine which face to rotate by popping the mvQueue
 	while (!mvQueue.empty()) {
 		rotate rot = mvQueue.front();
-		std::cout << rotate2str[static_cast<uint8_t>(rot)] << " ";
+		if (!init) {
+			std::cout << rotate2str[static_cast<uint8_t>(rot)] << " ";
+		} else if (rotatePartition == rotate::U) {
+			std::cout << rotate2str[static_cast<uint8_t>(rot)] << " ";
+		}
 		switch (rot) {
 		/**********************************************************************/
 		case rotate::U:
@@ -1258,7 +1335,9 @@ void Cube::createCubeFaces(bool init)
 		}
 		mvQueue.pop();
 	}
-	std::cout << "\n";
+	if (rotatePartition == rotate::U) {
+		std::cout << "\n";
+	}
 }
 
 inline void Cube::doMove(rotate rot)
@@ -1466,6 +1545,7 @@ int Cube::heuristicDB()
 	return std::max(std::max(cornerMoves, edge1Moves), edge2Moves);
 }
 
+#ifdef USE_PRUNE
 // recurse the cube state tree with DFS using pruning on corners and edges
 bool Cube::boundDFSprune(int depth, int bound)
 {
@@ -1507,7 +1587,7 @@ void Cube::performIDAstar()
 		std::cout << "search bound = " << bound << std::endl;
 	}
 }
-
+#endif
 // recurse DFS for pattern DB construction
 void Cube::DBboundDFS(int depth, int bound)
 {
@@ -1723,14 +1803,26 @@ void Cube::create3Dcube(const std::string &file)
 }
 
 // recurse the cube state tree with DFS
-bool Cube::boundDFS(int depth, int bound)
+bool Cube::boundDFS(int depth, int bound, std::promise<int> &prom)
 {
+	// check if solution found by other thread: atomic<bool>==true, and terminate by returning true
+	if (solutionFound) {
+		return true;
+	}
+
+	// conversion from rotation (0-15) to cube index (0-5)
+	const int rot2cube = 3;
 	if (depth > bound) {
 	    return false;
 	}
 	if (isSolved()) {
+		// send notification to parent thread using promise/future
+		// set atomic<bool> solutionFound = true
+		solutionFound = true;
+		prom.set_value(static_cast<int>(rotatePartition)/rot2cube);
 	    return true;
 	}
+
 	// Loop through all possible moves
 	for (rotate rot : {rotate::U, rotate::U_, rotate::U2, rotate::D, rotate::D_, rotate::D2,
 		rotate::L, rotate::L_, rotate::L2, rotate::R, rotate::R_, rotate::R2,
@@ -1739,7 +1831,7 @@ bool Cube::boundDFS(int depth, int bound)
 		doMove(rot);
 		// keep track of our moves
 		rotStack.push(rot);
-		if (boundDFS(depth + 1, bound)) {
+		if (boundDFS(depth + 1, bound, prom)) {
 			  return true;
 		}
 		// remove the last move since it didn't work
@@ -1751,21 +1843,139 @@ bool Cube::boundDFS(int depth, int bound)
 }
 
 // run IDDFS, Iterative Deepening Depth First Search
-void Cube::performIDA()
+void Cube::performIDA(rotate partition, std::promise<int> &prom)
 {
-	int depth = 0;
+	// check if solution found by other thread: atomic<bool>==true, and terminate by returning true
+	if (solutionFound) {
+		return;
+	}
+
+	const int rot2cube = 3;
+	if (isSolved()) {
+		// send notification to parent thread using promise/future
+		// set atomic<bool> solutionFound = true
+		solutionFound = true;
+		prom.set_value(static_cast<int>(rotatePartition)/rot2cube);
+	    return;
+	}
 	int bound = 1;
-	std::cout << "search bound = " << bound << std::endl;
-	while (!boundDFS(depth, bound)) {
+	while(true) { 
+		int depth = 1;
+		if (rotatePartition == rotate::U) {
+			std::cout << "search bound = " << bound << std::endl;
+		}
+
+		// switch on on the move partition and run IDDFS on it
+		switch (partition) {
+		case rotate::U:
+		case rotate::U_:
+		case rotate::U2:
+			for (rotate rot : {rotate::U, rotate::U_, rotate::U2}) {
+				doMove(rot);
+				// keep track of our moves
+				rotStack.push(rot);
+				if (boundDFS(depth, bound, prom)) {
+					return;
+				}
+				// remove the last move since it didn't work
+			    rotStack.pop();
+			    // undo the move, do the reverse twist to the cube state
+			    doMove(revRotate[static_cast<int>(rot)]);
+			}
+			break;
+		case rotate::D:
+		case rotate::D_:
+		case rotate::D2:
+			for (rotate rot : {rotate::D, rotate::D_, rotate::D2}) {
+				doMove(rot);
+				// keep track of our moves
+				rotStack.push(rot);
+				if (boundDFS(depth, bound, prom)) {
+					return;
+				}
+				// remove the last move since it didn't work
+			    rotStack.pop();
+			    // undo the move, do the reverse twist to the cube state
+			    doMove(revRotate[static_cast<int>(rot)]);
+			}
+			break;
+		case rotate::L:
+		case rotate::L_:
+		case rotate::L2:
+			for (rotate rot : {rotate::L, rotate::L_, rotate::L2}) {
+				doMove(rot);
+				// keep track of our moves
+				rotStack.push(rot);
+				if (boundDFS(depth, bound, prom)) {
+					return;
+				}
+				// remove the last move since it didn't work
+			    rotStack.pop();
+			    // undo the move, do the reverse twist to the cube state
+			    doMove(revRotate[static_cast<int>(rot)]);
+			}
+			break;
+		case rotate::R:
+		case rotate::R_:
+		case rotate::R2:
+			for (rotate rot : {rotate::R, rotate::R_, rotate::R2}) {
+				doMove(rot);
+				// keep track of our moves
+				rotStack.push(rot);
+				if (boundDFS(depth, bound, prom)) {
+					return;
+				}
+				// remove the last move since it didn't work
+			    rotStack.pop();
+			    // undo the move, do the reverse twist to the cube state
+			    doMove(revRotate[static_cast<int>(rot)]);
+			}
+			break;
+		case rotate::F:
+		case rotate::F_:
+		case rotate::F2:
+			for (rotate rot : {rotate::F, rotate::F_, rotate::F2}) {
+				doMove(rot);
+				// keep track of our moves
+				rotStack.push(rot);
+				if (boundDFS(depth, bound, prom)) {
+					return;
+				}
+				// remove the last move since it didn't work
+			    rotStack.pop();
+			    // undo the move, do the reverse twist to the cube state
+			    doMove(revRotate[static_cast<int>(rot)]);
+			}
+			break;
+		case rotate::B:
+		case rotate::B_:
+		case rotate::B2:
+			for (rotate rot : {rotate::B, rotate::B_, rotate::B2}) {
+				doMove(rot);
+				// keep track of our moves
+				rotStack.push(rot);
+				if (boundDFS(depth, bound, prom)) {
+					return;
+				}
+				// remove the last move since it didn't work
+			    rotStack.pop();
+			    // undo the move, do the reverse twist to the cube state
+			    doMove(revRotate[static_cast<int>(rot)]);
+			}
+			break;
+		}
 		++bound;
-		std::cout << "search bound = " << bound << std::endl;
 	}
 }
 
 void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 {
-	// create a cube with the trials and moves
-	Cube cube(trials, nmoves);
+	// create a separate cube for each thread
+	// create a cube with the trials, moves, and rotate partition
+	std::vector<Cube> cube;
+	for (int c = 0; c < nthreads; ++c) {
+		cube.push_back(Cube{trials, nmoves, static_cast<rotate>(DIM*c)});
+	}
 
     // show start, end, and elapsed times
     time_t rawtime1;
@@ -1775,16 +1985,26 @@ void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 	// loop over the trials
 	for (int tri = 0; tri < trials; ++tri) {
 
-		// Scramble cube starting position and save moves
-		cube.scrambleCube(nmoves, twists);
-
-		// Create the cube faces using saved moves
-		// and display them, 6 faces 3x3 in one row
-		cube.createCubeFaces(true);
-		cube.displayCubeFaces();
+		// read in the cube state from the config file
+		if (nmoves == 0) {
+			for (Cube &c : cube) {
+				c.readCubeConfig();
+			}
+		} else {
+			// Scramble cube starting position and save moves
+			for (Cube &c : cube) {
+				c.scrambleCube(nmoves, twists);
+				// Create the cube faces using saved moves
+				// and display them, 6 faces 3x3 in one row
+				c.createCubeFaces(true);
+			}
+		}
+		// any cube works for this processing
+		cube[0].displayCubeFaces();
 
 		// Save the scrambled cube for 3D scatterplot in matplotlib.pyplot
-		cube.create3Dcube(rubik_scrambled);
+		// any cube works for this processing
+		cube[0].create3Dcube(rubik_scrambled);
 
 		std::cout << "Creating 3D scatterplots for scrambled cube.  Close plotting window to proceed.\n";
 		// Display the scrambled 3D cube using Python, both views
@@ -1796,18 +2016,38 @@ void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 	    timeinfo = localtime (&rawtime1);
 	    std::cout << std::string("Start local time and date: ") << std::string(asctime(timeinfo)) << std::endl;
 
+		// one-off communication between threads signaling solution found
+		std::promise<int> prom;
+	    std::future<int> fut = prom.get_future();
+	    // create six threads, each one calls performIDA on the cube object, partition the DFS evenly among threads
+	    // Each thread starts the DFS for one face's moves, such as U,U',U2, then searches with all 18 moves for remaining
+	    // depths in the bound
 		// Perform IDA()
-		cube.performIDA();
+	    std::vector<std::thread> threadvec;
+	    int partition = 0;
+	    for (Cube &c : cube) {
+	    	threadvec.push_back(std::thread(&Cube::performIDA, &c, static_cast<rotate>(partition), std::ref(prom)));
+	    	partition += 3;
+	    }
+
+		// wait for notification from a thread with the solution, use the rotStack with the solution moves
+		// use promise/future to signal solution
+	    partition = fut.get();
+
+		// join with the threads
+	    for (std::thread &thd : threadvec) {
+	    	thd.join();
+	    }
 
 		// tabulate the results:  solution time and 1/4 turn metric (QTM)
-		cube.tabulateTestResults();
+		cube[partition].tabulateTestResults();
 
 		// Create and Display the faces of the solution
-		cube.createCubeFaces(false);
-		cube.displayCubeFaces();
+		cube[partition].createCubeFaces(false);
+		cube[partition].displayCubeFaces();
 
 		// Save the solution cube for 3D scatterplot in matplotlib.pyplot
-		cube.create3Dcube(rubik_solved);
+		cube[partition].create3Dcube(rubik_solved);
 
 		// end time, elapsed time
 	    time(&rawtime2);
@@ -1823,6 +2063,7 @@ void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists)
 	}
 }
 
+#ifdef USE_PRUNE
 void handleIDAstar(int trials, int nmoves, const std::vector<std::string> &twists)
 {
 
@@ -1888,11 +2129,12 @@ void handleIDAstar(int trials, int nmoves, const std::vector<std::string> &twist
 	}
 
 }
+#endif
 
 int main(int argc, char *argv[]) {
 	// seed the random number generator so it changes over time
 	std::srand(time(NULL));
-	const int min_moves = 1;
+	const int min_moves = 0;
 	const int max_moves = 10;
 	int nmoves = 1;
 	std::string prune;
@@ -1905,14 +2147,14 @@ int main(int argc, char *argv[]) {
 		 std::cout << "system processor is not available to call Python scatterplot\n";
 	 }
 
+	// valid moves
+	const std::vector<std::string> twists{"U", "U'", "U2", "D", "D'", "D2", "L", "L'", "L2",
+									"R", "R'", "R2", "F", "F'", "F2", "B", "B'", "B2"};
+
+	std::vector<std::string> moves;
 
 	// use command line arguments to make the moves and choose IDA or IDA*
 	if (argc > 1) {
-
-		// valid moves
-		const std::vector<std::string> twists{"U", "U'", "U2", "D", "D'", "D2", "L", "L'", "L2",
-										"R", "R'", "R2", "F", "F'", "F2", "B", "B'", "B2"};
-		std::vector<std::string> moves;
 
 		nmoves = argc-1;
 		for (int i = 1; i < argc; ++i) {
@@ -1938,7 +2180,9 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 		if (prune == "y") {
+#ifdef USE_PRUNE
 			handleIDAstar(1, nmoves, moves);
+#endif
 		} else {
 			handleIDA(1, nmoves, moves);
 		}
@@ -1948,11 +2192,13 @@ int main(int argc, char *argv[]) {
 		const int max_trials = 10;
 		int trials = 1;
 		// Enter the number of moves
-		std::cout << "Enter the number of Rubik's Cube moves (1-10): ";
+		std::cout << "Enter the number of Rubik's Cube moves (0-10): ";
 		std::cin >> nmoves;
+		if (nmoves != 0) {
 		// Enter the number of trials
-		std::cout << "Enter the number of trials using the given number of moves (1-10): ";
-		std::cin >> trials;
+			std::cout << "Enter the number of trials using the given number of moves (1-10): ";
+			std::cin >> trials;
+		}
 		// Enter IDA or IDA*
 		std::cout << "Use pruning tables (y/n): ";
 		std::cin >> prune;
@@ -1970,10 +2216,17 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
+		// create random moves
+		for (int n = 0; n < nmoves; ++n) {
+			moves.push_back(twists[std::rand() % MOVES]);
+		}
+
 		if (prune == "y") {
-			handleIDAstar(trials, nmoves);
+#ifdef USE_PRUNE
+			handleIDAstar(trials, nmoves, moves);
+#endif
 		} else {
-			handleIDA(trials, nmoves);
+			handleIDA(trials, nmoves, moves);
 		}
 
 	}
