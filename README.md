@@ -75,6 +75,13 @@ exchange.  Future/promise was used instead of a condition variable and mutex bec
 launching thread in the promise::set_value was the ID of the solution-finding thread.  The launching thread was blocked with a future::get
 function call.  Once the promise was received by the launching thread, it joined with all the DFS threads that were doing the IDDFS.
 </p>
+<p>
+  The results shown below are from using a single-threaded implementation.  With multiple threads the solution time can be decreased
+  depending on how many cores the processor has and what other processes are running on the machine.  My laptop has 10 cores and
+  12 logical processors.  There was a significant speed up to find the move solution.  However on scramble moves greater than 8 it
+  was taking longer than I was willing to keep the machine running (>12 hours).  The optimal solution (fewest moves) will be found
+  if you are willing to keep the program running.
+</p>
 <h4>7 moves, specify moves from command line, 1053 seconds</h4>
 <img width="635" height="550" alt="image" src="https://github.com/user-attachments/assets/332878d1-2d20-46cc-8db0-30716f855789" />
 <img width="635" height="549" alt="image" src="https://github.com/user-attachments/assets/dabc0cc6-7abe-446e-9622-7bef40c9dcec" />
