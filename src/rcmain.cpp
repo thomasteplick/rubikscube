@@ -2182,6 +2182,8 @@ int main(int argc, char *argv[]) {
 		if (prune == "y") {
 #ifdef USE_PRUNE
 			handleIDAstar(1, nmoves, moves);
+#else
+			std::cout << "USE_PRUNE directive not defined\n";
 #endif
 		} else {
 			handleIDA(1, nmoves, moves);
@@ -2224,6 +2226,8 @@ int main(int argc, char *argv[]) {
 		if (prune == "y") {
 #ifdef USE_PRUNE
 			handleIDAstar(trials, nmoves, moves);
+#else
+			std::cout << "USE_PRUNE directive not defined\n";
 #endif
 		} else {
 			handleIDA(trials, nmoves, moves);
