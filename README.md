@@ -68,12 +68,15 @@ will not run if the databases are placed on the stack.
 <p>
 Concurrency was incorporated by using multithreading.  Six threads were used to perform the IDDFS; each thread used the three moves for a
 face, on the first descent level only.  The remaining levels of the IDDFS used the total 18 moves.  For instance, one thread started the DFS using
-U, U', and U2 only.  The next recursion of the descent used all 18 moves of the cube.  When a thread found the solution, it would set
+U, U', and U2 only.  The following recursions of the descent used all 18 moves of the cube.  When a thread found the solution, it would set
 a static member atomic<bool> variable true.  The other threads read this boolean every time they start a DFS.  If it is true they immediately 
-return and the thread terminates.  The solution thread also signals the parent launching thread with a future/promise synchronization
-exchange.  Future/promise was used instead of a condition variable and mutex because this is a one-off event.  The value sent to the
+return and the thread terminates.  The solution thread also signals the parent launching thread with a future/promise asychronous call
+exchange.  Future/promise was used instead of a condition variable with mutex because this is a one-off event.  The value sent to the
 launching thread in the promise::set_value was the ID of the solution-finding thread.  The launching thread was blocked with a future::get
-function call.  Once the promise was received by the launching thread, it joined with all the DFS threads that were doing the IDDFS.
+function call.  Once the promise was received by the launching thread, it joined with all the DFS threads that were doing the IDDFS.  The
+launching thread used the ID of the solution-finding thread to determine which cube had the solution moves on its move stack.  Each thread
+has its own cube instance and move stack.  There was no chance of a race condition occurring since each thread had its own cube on which
+it performed the moves during IDDFS.
 </p>
 <p>
   The results shown below are from using a single-threaded implementation.  With multiple threads the solution time can be decreased
