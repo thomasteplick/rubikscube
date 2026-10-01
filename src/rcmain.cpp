@@ -28,7 +28,6 @@
 #include <thread>
 #include <map>
 #include <exception>
-#include <unordered_map>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -68,6 +67,61 @@ Cube::Cube(int nt, int mt, rotate rotPart) :
 		throw std::bad_alloc();
 	}
 #endif
+	// convert string twists to rotate moves
+	// U, U_, U2, D, D_, D2, L, L_, L2, R, R_, R2, F, F_, F2, B, B_, B2
+	storot["U"] = rotate::U;
+	storot["U'"] = rotate::U_;
+	storot["U2"] = rotate::U2;
+	storot["D"] = rotate::D;
+	storot["D'"] = rotate::D_;
+	storot["D2"] = rotate::D2;
+	storot["L"] = rotate::L;
+	storot["L'"] = rotate::L_;
+	storot["L2"] = rotate::L2;
+	storot["R"] = rotate::R;
+	storot["R'"] = rotate::R_;
+	storot["R2"] = rotate::R2;
+	storot["F"] = rotate::F;
+	storot["F'"] = rotate::F_;
+	storot["F2"] = rotate::F2;
+	storot["B"] = rotate::B;
+	storot["B'"] = rotate::B_;
+	storot["B2"] = rotate::B2;
+
+	// the inverse of above, convert rotate moves to string twists
+	rot2str[rotate::U] = "U";
+	rot2str[rotate::U_] = "U'";
+	rot2str[rotate::U2] = "U2";
+	rot2str[rotate::D] = "D";
+	rot2str[rotate::D_] = "D'";
+	rot2str[rotate::D2] = "D2";
+	rot2str[rotate::L] = "L";
+	rot2str[ rotate::L_] = "L'";
+	rot2str[rotate::L2] = "L2";
+	rot2str[rotate::R] = "R";
+	rot2str[rotate::R_] = "R'";
+	rot2str[rotate::R2] = "R2";
+	rot2str[rotate::F] = "F";
+	rot2str[rotate::F_] = "F'";
+	rot2str[rotate::F2] = "F2";
+	rot2str[rotate::B] = "B";
+	rot2str[rotate::B_] = "B'";
+	rot2str[rotate::B2] = "B2";
+
+	// initialize the facelets of a face to the same color (the solved state)
+	for (int i = 0; i < DIM; ++i) {
+		for (int j = 0; j < DIM; ++j) {
+			// U and D faces, white and yellow
+			facelets[static_cast<uint8_t>(face::U)][i][j] = static_cast<uint8_t>(color::WHITE);
+			facelets[static_cast<uint8_t>(face::D)][i][j] = static_cast<uint8_t>(color::YELLOW);
+			// L and R faces, green and blue
+			facelets[static_cast<uint8_t>(face::L)][i][j] = static_cast<uint8_t>(color::GREEN);
+			facelets[static_cast<uint8_t>(face::R)][i][j] = static_cast<uint8_t>(color::BLUE);
+			// F and B faces, red and orange
+			facelets[static_cast<uint8_t>(face::F)][i][j] = static_cast<uint8_t>(color::RED);
+			facelets[static_cast<uint8_t>(face::B)][i][j] = static_cast<uint8_t>(color::ORANGE);
+		}
+	}
 }
 
 void Cube::readCubeConfig()
@@ -510,30 +564,6 @@ bool Cube::isSolved()
 // scramble solved cube with nmoves
 void Cube::scrambleCube(int nmoves, const std::vector<std::string> &twists)
 {
-	// convert string twists to rotate moves
-	// U, U_, U2, D, D_, D2, L, L_, L2, R, R_, R2, F, F_, F2, B, B_, B2
-	std::unordered_map<std::string, rotate> storot;
-	if (twists.size() > 0) {
-		storot["U"] = rotate::U;
-		storot["U'"] = rotate::U_;
-		storot["U2"] = rotate::U2;
-		storot["D"] = rotate::D;
-		storot["D'"] = rotate::D_;
-		storot["D2"] = rotate::D2;
-		storot["L"] = rotate::L;
-		storot["L'"] = rotate::L_;
-		storot["L2"] = rotate::L2;
-		storot["R"] = rotate::R;
-		storot["R'"] = rotate::R_;
-		storot["R2"] = rotate::R2;
-		storot["F"] = rotate::F;
-		storot["F'"] = rotate::F_;
-		storot["F2"] = rotate::F2;
-		storot["B"] = rotate::B;
-		storot["B'"] = rotate::B_;
-		storot["B2"] = rotate::B2;
-	}
-
 	uint8_t n = 0;
 	// initialize the cube order for the solved cube
 	for (int i = 0; i < DIM; ++i) {
@@ -550,6 +580,15 @@ void Cube::scrambleCube(int nmoves, const std::vector<std::string> &twists)
 		mvQueue.pop();
 	}
 
+	// save the scramble moves to disk on one line, space separation
+	// open cube move file and write moves for scramble
+	std::ofstream fdisplaymoves;
+	fdisplaymoves.open(cubeMoves, std::fstream::out | std::fstream::trunc);
+	if (!fdisplaymoves.is_open()) {
+		std::cout << "could not open file: " << cubeMoves << std::endl;
+		throw std::runtime_error("could not open file: " + cubeMoves);
+	}
+
 	rotate mv;
 	// loop over the number of requested twists
 	for (int i = 0; i < nmoves; ++i) {
@@ -557,7 +596,11 @@ void Cube::scrambleCube(int nmoves, const std::vector<std::string> &twists)
 		doMove(mv);
 		// push to move queue for later display
 		mvQueue.push(mv);
+		// save to disk
+		fdisplaymoves << rot2str[mv] << " ";
 	}
+	fdisplaymoves << std::endl;
+	fdisplaymoves.close();
 }
 
 // Display the cube faces using Windows color attributes
@@ -687,7 +730,14 @@ void Cube::displayCubeFaces()
 
 void Cube::tabulateTestResults()
 {
-	// show trial move count and time
+	// save the solution moves to disk on one line, space separation
+	// open cube move file and write moves for solution
+	std::ofstream fdisplaymoves;
+	fdisplaymoves.open(cubeMoves, std::fstream::app);
+	if (!fdisplaymoves.is_open()) {
+		std::cout << "could not open file: " << cubeMoves << std::endl;
+		throw std::runtime_error("could not open file: " + cubeMoves);
+	}
 
 	// buffer to hold the moves in reverse order
 	std::vector<rotate> buf;
@@ -700,16 +750,20 @@ void Cube::tabulateTestResults()
 		buf.push_back(rotStack.top());
 		rotStack.pop();
 	}
-	std::cout << "cube solution moves: ";
+	//std::cout << "cube solution moves: ";
 	// recover the forward IDA solution moves by
 	// reversing the reverse order in buffer
 	for (auto revit = buf.rbegin(); revit != buf.rend(); ++revit) {
 		mvQueue.push(*revit);
+		// save to disk
+		fdisplaymoves << rot2str[*revit] << " ";
 	}
+	fdisplaymoves << std::endl;
+	fdisplaymoves.close();
 }
 
 // Create six 3x3 cube faces from the cube state
-void Cube::createCubeFaces(bool init)
+void Cube::createCubeFaces(bool scramble, std::string move)
 {
 
 	uint8_t prev[DIM];
@@ -718,30 +772,23 @@ void Cube::createCubeFaces(bool init)
 		"L", "L'", "L2", "R", "R'", "R2", "F", "F'", "F2", "B", "B'", "B2"};
 
 	// initialize the facelets of a face to the same color (the solved state)
-	if (init) {
-		for (int i = 0; i < DIM; ++i) {
-			for (int j = 0; j < DIM; ++j) {
-				// U and D faces, white and yellow
-				facelets[static_cast<uint8_t>(face::U)][i][j] = static_cast<uint8_t>(color::WHITE);
-				facelets[static_cast<uint8_t>(face::D)][i][j] = static_cast<uint8_t>(color::YELLOW);
-				// L and R faces, green and blue
-				facelets[static_cast<uint8_t>(face::L)][i][j] = static_cast<uint8_t>(color::GREEN);
-				facelets[static_cast<uint8_t>(face::R)][i][j] = static_cast<uint8_t>(color::BLUE);
-				// F and B faces, red and orange
-				facelets[static_cast<uint8_t>(face::F)][i][j] = static_cast<uint8_t>(color::RED);
-				facelets[static_cast<uint8_t>(face::B)][i][j] = static_cast<uint8_t>(color::ORANGE);
-			}
-		}
+	if (scramble) {
 		// print the scramble moves
 		if (rotatePartition == rotate::U) {
 			std::cout << "cube scramble moves: ";
 		}
+	} else {
+		std::cout << "cube solution moves: ";
+	}
+
+	if (move.size() > 0) {
+		mvQueue.push(storot[move]);
 	}
 
 	// Determine which face to rotate by popping the mvQueue
 	while (!mvQueue.empty()) {
 		rotate rot = mvQueue.front();
-		if (!init) {
+		if (!scramble) {
 			std::cout << rotate2str[static_cast<uint8_t>(rot)] << " ";
 		} else if (rotatePartition == rotate::U) {
 			std::cout << rotate2str[static_cast<uint8_t>(rot)] << " ";
@@ -2131,6 +2178,44 @@ void handleIDAstar(int trials, int nmoves, const std::vector<std::string> &twist
 }
 #endif
 
+void handleDisplayCubeMoves()
+{
+	// create cube instance
+	Cube cube;
+	std::string line;
+	std::string move;
+
+	// open cube move file and read in moves for scramble and solution
+	std::ifstream fdisplaymoves;
+	fdisplaymoves.open(cubeMoves, std::fstream::in);
+	if (!fdisplaymoves.is_open()) {
+		std::cout << "could not open file: " << cubeMoves << std::endl;
+		throw std::runtime_error("could not open file: " + cubeMoves);
+	}
+
+	// read in the lines, which contain the moves for scramble and the solution
+	bool scramble = true;
+	while (getline(fdisplaymoves, line)) {
+		// create a string stream to split the lines into move strings
+		std::istringstream istrm(line);
+		// get the move
+		while(istrm >> move) {
+			// for each move, rotate facelets with createCubeFaces
+			// put move in move queue in createCubeFaces
+			cube.createCubeFaces(scramble, move);
+
+			// display 6 facelets with displayCubeFacdes and heading of "scramble move #", sleep for 2 seconds
+			cube.displayCubeFaces();
+
+			// sleep 2 sec
+			std::this_thread::sleep_for(std::chrono::seconds(2));
+		}
+		scramble = false;
+	}
+
+	fdisplaymoves.close();
+}
+
 int main(int argc, char *argv[]) {
 	// seed the random number generator so it changes over time
 	std::srand(time(NULL));
@@ -2190,47 +2275,64 @@ int main(int argc, char *argv[]) {
 		}
 
 	} else {
-		const int min_trials = 1;
-		const int max_trials = 10;
-		int trials = 1;
-		// Enter the number of moves
-		std::cout << "Enter the number of Rubik's Cube moves (0-10): ";
-		std::cin >> nmoves;
-		if (nmoves != 0) {
-		// Enter the number of trials
-			std::cout << "Enter the number of trials using the given number of moves (1-10): ";
-			std::cin >> trials;
-		}
-		// Enter IDA or IDA*
-		std::cout << "Use pruning tables (y/n): ";
-		std::cin >> prune;
-		if ((nmoves < min_moves) || (nmoves > max_moves)) {
-			result << "moves not in [" << min_moves << "," << max_moves << "], ";
-		}
-		if ((trials < min_trials) || (trials > max_trials)) {
-			result << "trials not in [" << min_trials << "," << max_trials << "], ";
-		}
-		if ((prune != "y") && (prune != "n")) {
-			result << "prune is not 'y' or 'n'" << "\n";
+		int choice;
+		// choose display cube moves or run IDDFS
+		std::cout << "choose 1=Run IDDFS, 2=Display Cube Moves -> ";
+		std::cin >> choice;
+		if (choice != 1 && choice != 2) {
+			result << "choice must be 1=Run IDDFS or 2=Display Cube Moves, ";
 		}
 		if (result.str().size() > 0) {
 			std::cout << result.str() << std::endl;
 			return 1;
 		}
 
-		// create random moves
-		for (int n = 0; n < nmoves; ++n) {
-			moves.push_back(twists[std::rand() % MOVES]);
-		}
+		if (choice == 1) {
+			const int min_trials = 1;
+			const int max_trials = 10;
+			int trials = 1;
+			// Enter the number of moves
+			std::cout << "Enter the number of Rubik's Cube moves (0-10): ";
+			std::cin >> nmoves;
+			if (nmoves != 0) {
+			// Enter the number of trials
+				std::cout << "Enter the number of trials using the given number of moves (1-10): ";
+				std::cin >> trials;
+			}
+			// Enter IDA or IDA*
+			std::cout << "Use pruning tables (y/n): ";
+			std::cin >> prune;
+			if ((nmoves < min_moves) || (nmoves > max_moves)) {
+				result << "moves not in [" << min_moves << "," << max_moves << "], ";
+			}
+			if ((trials < min_trials) || (trials > max_trials)) {
+				result << " trials not in [" << min_trials << "," << max_trials << "], ";
+			}
+			if ((prune != "y") && (prune != "n")) {
+				result << " prune is not 'y' or 'n'" << "\n";
+			}
+			if (result.str().size() > 0) {
+				std::cout << result.str() << std::endl;
+				return 1;
+			}
 
-		if (prune == "y") {
-#ifdef USE_PRUNE
-			handleIDAstar(trials, nmoves, moves);
-#else
-			std::cout << "USE_PRUNE directive not defined\n";
-#endif
+			// create random moves
+			for (int n = 0; n < nmoves; ++n) {
+				moves.push_back(twists[std::rand() % MOVES]);
+			}
+
+			if (prune == "y") {
+	#ifdef USE_PRUNE
+				handleIDAstar(trials, nmoves, moves);
+	#else
+				std::cout << "USE_PRUNE directive not defined\n";
+	#endif
+			} else {
+				handleIDA(trials, nmoves, moves);
+			}
 		} else {
-			handleIDA(trials, nmoves, moves);
+			// display the cube faces for the scramble and solution moves at 2 sec intervals
+			handleDisplayCubeMoves();
 		}
 
 	}
