@@ -14,6 +14,7 @@
 #include <memory>
 #include <atomic>
 #include <future>
+#include <unordered_map>
 
 /*
  * Home start position of the cube, Face=Color
@@ -33,6 +34,7 @@ const std::string cornerDBfile{"..\\data\\cornerDB.txt"};
 const std::string edge1DBfile{"..\\data\\edge1DB.txt"};
 const std::string edge2DBfile{"..\\data\\edge2DB.txt"};
 const std::string cubestateconf{"..\\data\\cubestate.conf"};
+const std::string cubeMoves{"..\\data\\cubemoves.txt"};
 
 // number of faces in the cube
 const int NFACES = 6;
@@ -158,6 +160,12 @@ private:
 								  rotate::L_, rotate::L, rotate::L2, rotate::R_, rotate::R, rotate::R2,
 								  rotate::F_, rotate::F, rotate::F2, rotate::B_, rotate::B, rotate::B2};
 
+	// convert string twists to rotate moves
+	// U, U_, U2, D, D_, D2, L, L_, L2, R, R_, R2, F, F_, F2, B, B_, B2
+	std::unordered_map<std::string, rotate> storot;
+	// the inverse of above, convert rotate moves to string twists
+	std::unordered_map<rotate, std::string> rot2str;
+
 public:
 	Cube(int ntrials=1, int maxTwists=1, rotate rotatePartition=rotate::U);
 	~Cube() = default;
@@ -168,7 +176,7 @@ public:
 
 	void displayCubeFaces();
 	void scrambleCube(int nmoves, const std::vector<std::string> &twists);
-	void createCubeFaces(bool init);
+	void createCubeFaces(bool init, std::string move = "");
 	void performIDA(rotate partition, std::promise<int> &prom);
 	void performIDAstar();
 	void tabulateTestResults();
@@ -180,5 +188,6 @@ public:
 
 void handleIDA(int trials, int nmoves, const std::vector<std::string> &twists = std::vector<std::string>());
 void handleIDAstar(int trials, int nmoves, const std::vector<std::string> &twists = std::vector<std::string>());
+void handleDisplayCubeMoves();
 
 #endif /* RCMAIN_H_ */
