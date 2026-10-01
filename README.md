@@ -103,8 +103,19 @@ it performed the moves during IDDFS.
 <img width="998" height="766" alt="image" src="https://github.com/user-attachments/assets/8fd7abf5-5265-4526-9330-9fae116f7f29" />
 <img width="637" height="551" alt="image" src="https://github.com/user-attachments/assets/5014ad89-5f35-42d9-ab86-d1e69877d638" />
 <img width="639" height="549" alt="image" src="https://github.com/user-attachments/assets/6de2fcda-0729-4227-b6d7-08bbb965884f" />
-
-
+<p>
+The menu offers a <i>Display Cube Moves</i> option.  The cube faces will be displayed for each scramble move and each solution move.
+The solved state is shown as the last set of cube faces.  The faces are displayed at a two second rate.  The order of the faces
+is: 
+	<ul>
+		<li>L (left)</li>
+		<li>B (back)</li>
+		<li>D (down)</li>
+		<li>F (front)</li>
+		<li>R (right)</li>
+		<li>U (up)</li>
+	</ul>
+</p>
 <h4>Display Moves</h4>
 <img width="916" height="1022" alt="image" src="https://github.com/user-attachments/assets/f9565414-28b2-4301-b5f0-6c2c407fe099" />
 <img width="929" height="472" alt="image" src="https://github.com/user-attachments/assets/c94de398-cf1f-4361-a4f3-9ec4bacb067b" />
