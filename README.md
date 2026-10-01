@@ -105,3 +105,9 @@ it performed the moves during IDDFS.
 <img width="639" height="549" alt="image" src="https://github.com/user-attachments/assets/6de2fcda-0729-4227-b6d7-08bbb965884f" />
 
 
+<h4>Display Moves</h4>
+<img width="916" height="1022" alt="image" src="https://github.com/user-attachments/assets/f9565414-28b2-4301-b5f0-6c2c407fe099" />
+<img width="929" height="472" alt="image" src="https://github.com/user-attachments/assets/c94de398-cf1f-4361-a4f3-9ec4bacb067b" />
+
+
+
